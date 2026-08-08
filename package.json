@@ -1,42 +1,42 @@
 {
-  "name": "cover-letter-generator",
-  "version": "0.1.0",
-  "description": "A package that generates cover letters by using AI",
-  "private": true,
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/freshmozart1/cover-letter-generator.git"
-  },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "node --import tsx --test \"test/*.test.ts\"",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json"
-  },
-  "license": "ISC",
-  "author": "freshmozart1",
-  "type": "commonjs",
-  "engines": {
-    "node": ">=22.9.0"
-  },
-  "dependencies": {
-    "openai": "^6.49.0",
-    "cosine-similarity": "github:freshmozart1/cosine-similarity#v1.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.20.1",
-    "tsx": "^4.23.1",
-    "typescript": "^6.0.0",
-    "@eslint/js": "^10.0.1",
-    "typescript-eslint": "^8.65.0",
-    "prettier": "^3.9.6"
-  },
-  "allowScripts": {
-    "esbuild@0.28.1": true,
-    "fsevents@2.3.3": true
-  }
+    "name": "cover-letter-generator",
+    "version": "0.1.0",
+    "description": "A package that generates cover letters by using AI",
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/freshmozart1/cover-letter-generator.git"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "test": "node --import tsx --test \"test/*.test.ts\"",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json"
+    },
+    "license": "ISC",
+    "author": "freshmozart1",
+    "type": "commonjs",
+    "engines": {
+        "node": ">=22.9.0"
+    },
+    "dependencies": {
+        "openai": "^6.49.0",
+        "cosine-similarity": "github:freshmozart1/cosine-similarity#v1.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.20.1",
+        "tsx": "^4.23.1",
+        "typescript": "^6.0.0",
+        "@eslint/js": "^10.0.1",
+        "typescript-eslint": "^8.65.0",
+        "prettier": "^3.9.6"
+    },
+    "allowScripts": {
+        "esbuild@0.28.1": true,
+        "fsevents@2.3.3": true
+    }
 }
