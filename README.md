@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.1.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.2.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -338,16 +338,11 @@ npm install          # requires the allow-git=root line in .npmrc
 npm run build        # tsc -p tsconfig.json → dist/
 npm run typecheck    # tsc --noEmit on both tsconfig.json and tsconfig.test.json
 npm test             # node --import tsx --test "test/*.test.ts"
+npm run lint         # eslint .
+npm run format       # prettier --write .
 ```
 
-Lint and format have no npm scripts yet — run the tools directly:
-
-```bash
-npx eslint .
-npx prettier --write .
-```
-
-There is no single "check everything" script. Run all four gates in order — `npx eslint .`, `npm run typecheck`, `npm test`, `npm run build` — before opening a PR.
+There is no single "check everything" script. Run all four gates in order — `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` — before opening a PR.
 
 ### Project conventions
 
