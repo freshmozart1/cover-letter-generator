@@ -7,3 +7,4 @@ export { SEGMENTS_SCHEMA } from './segmentsSchema';
 export { COVER_LETTER_SEGMENT_NAMES } from './constants';
 export { isCoverLetterTextSegments } from './coverLetterSegmentation';
 export { generateCoverLetter } from './generate';
+export { embedJob } from './embedJob';
