@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+.fallow
+.claude/settings.local.json
+.DS_Store
+.vscode
+.env
