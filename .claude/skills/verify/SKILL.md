@@ -5,7 +5,7 @@ description: Run lint, typecheck, test, and build together for cover-letter-gene
 
 Run these in order and report the first failure without guessing at a fix:
 
-1. `npx eslint .`
+1. `npm run lint`
 2. `npm run typecheck`
 3. `npm test`
 4. `npm run build`

@@ -16,8 +16,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Build: `npm run build` (`tsc -p tsconfig.json`)
 - Test: `npm test` (Node's built-in test runner via `node --import tsx --test "test/*.test.ts"` — no Jest/Vitest/Mocha)
 - Typecheck: `npm run typecheck` (checks both `tsconfig.json` and `tsconfig.test.json`)
-- Lint: no npm script exists yet — run directly with `npx eslint .`
-- Format: no npm script exists yet — run directly with `npx prettier --write .`
+- Lint: `npm run lint` (`eslint .`)
+- Format: `npm run format` (`prettier --write .`)
 
 There's no combined "check everything" script — use the `/verify` skill for that.
 
