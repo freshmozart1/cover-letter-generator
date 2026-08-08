@@ -6,3 +6,4 @@ coverage/
 .claude/settings.local.json
 .DS_Store
 .vscode
+.env
