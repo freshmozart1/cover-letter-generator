@@ -1,11 +1,8 @@
-import type { CoverLetter, CoverLetterSegments, Job } from '.';
-import {
-    SEGMENTS_SCHEMA,
-    openAI,
-    COVER_LETTER_SEGMENT_NAMES,
-    parseCoverLetterSegmentsResponse,
-    embedCoverLetterSegments,
-} from '.';
+import type { CoverLetter, CoverLetterSegments, Job } from './types';
+import { SEGMENTS_SCHEMA } from './segmentsSchema';
+import { openAI, parseCoverLetterSegmentsResponse } from './llm';
+import { COVER_LETTER_SEGMENT_NAMES } from './constants';
+import { embedCoverLetterSegments } from './embedCoverLetterSegments';
 
 const GENERATOR_MODEL = 'gpt-5.6-sol';
 const GENERATOR_INSTRUCTIONS = `You are an experienced career counselor who crafts professional, authentic cover letters.

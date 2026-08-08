@@ -1,9 +1,7 @@
 import OpenAI from 'openai';
-import {
-    CoverLetterSegments,
-    isCoverLetterTextSegments,
-    normalizeCoverLetterText,
-} from '.';
+import { CoverLetterSegments } from './types';
+import { isCoverLetterTextSegments } from './coverLetterSegmentation/isCoverLetterTextSegments';
+import { normalizeCoverLetterText } from './normalize';
 export const openAI = new OpenAI();
 
 export function parseCoverLetterSegmentsResponse(
