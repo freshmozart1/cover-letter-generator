@@ -232,7 +232,7 @@ function getTopXSimilarCoverLetters(
     jobEmbedding: TextEmbedding,
     coverLetters: CoverLetter[],
     similarityWeights?: SimilarityWeights,
-): Promise<{ coverLetter: CoverLetter; similarity: number }[]>;
+): Promise<CoverLetterSimilarityMatch[]>;
 ```
 
 Returns the `x` highest-scoring letters, **each wrapped with its score** — map over `.coverLetter` before passing the result to `generateCoverLetter`. Default weights:
@@ -315,6 +315,12 @@ type CoverLetter = Record<
 >;
 
 type SimilarityWeights = Record<CoverLetterSegmentName, number>;
+
+// The shape returned by getTopXSimilarCoverLetters — a cover letter paired with its score.
+type CoverLetterSimilarityMatch = {
+    coverLetter: CoverLetter;
+    similarity: number;
+};
 
 type Job = {
     title: string;

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-08
+
+### Fixed
+
+- `getTopXSimilarCoverLetters`'s JSDoc incorrectly claimed it returns cover
+  letters; it actually returns `{ coverLetter, similarity }` pairs. The JSDoc
+  now describes the correct shape, and the function's previously inferred
+  return type is now explicitly annotated as `Promise<CoverLetterSimilarityMatch[]>`,
+  a new type exported from `src/types.ts` (closes #6).
+
+### Changed
+
+- Internal-only refactor: `isCoverLetterTextSegments` now checks its six
+  segment keys with `.every()` over the existing `COVER_LETTER_SEGMENT_NAMES`
+  constant instead of a long `&&` chain, lowering complexity. No public API,
+  export, or runtime behavior changed.
+
 ## [0.2.1] - 2026-08-08
 
 ### Fixed
