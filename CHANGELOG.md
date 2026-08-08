@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-08
+
+### Added
+
+- `segmentCoverLetter` and its `SegmentationResult` return type are now exported
+  from the package root, making stage 1 of the pipeline (heuristic segmentation
+  with LLM fallback) usable by consumers (closes #4).
+
+### Changed
+
+- Internal-only refactor: adding `segmentCoverLetter` to the
+  `coverLetterSegmentation` barrel reintroduced a circular dependency between
+  the barrel and `segmentCoverLetterWithLlm.ts`. The latter now imports its
+  dependencies directly from their source modules instead of through the
+  barrel, and the barrel's now-unused re-exports were removed. No public API,
+  export, or runtime behavior changed.
+
 ## [0.2.1] - 2026-08-08
 
 ### Fixed
