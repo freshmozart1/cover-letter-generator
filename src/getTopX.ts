@@ -36,7 +36,7 @@ function calculateWeightedCoverLetterSimilarity(
 
 /**
  * Returns the top x `{ coverLetter, similarity }` pairs whose cover letters match closest with the job embedding, sorted by descending cosine similarity.
- * @param x The number of coverletters to return
+ * @param x The number of coverletters to return. Must be a non-negative integer.
  * @param jobEmbedding The embedded job against whom the coverletters should be compared
  * @param coverLetters The coverletters that should be compared
  * @param similarityWeights optional weight multipliers for the separate segments of the cover letters.
