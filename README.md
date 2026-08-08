@@ -338,16 +338,11 @@ npm install          # requires the allow-git=root line in .npmrc
 npm run build        # tsc -p tsconfig.json → dist/
 npm run typecheck    # tsc --noEmit on both tsconfig.json and tsconfig.test.json
 npm test             # node --import tsx --test "test/*.test.ts"
+npm run lint         # eslint .
+npm run format       # prettier --write .
 ```
 
-Lint and format have no npm scripts yet — run the tools directly:
-
-```bash
-npx eslint .
-npx prettier --write .
-```
-
-There is no single "check everything" script. Run all four gates in order — `npx eslint .`, `npm run typecheck`, `npm test`, `npm run build` — before opening a PR.
+There is no single "check everything" script. Run all four gates in order — `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` — before opening a PR.
 
 ### Project conventions
 
