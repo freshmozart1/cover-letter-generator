@@ -21,8 +21,10 @@ type IndexedLine = {
 
 /**
  * A function that finds the subject line of a cover letter. It only searches the
- * lines above the salutation, and never further than the first
- * {@link MAX_SUBJECT_SEARCH_LINES} non-empty lines.
+ * lines above the salutation. When a salutation was found, its position is used
+ * as the exact upper bound of the search — no arbitrary line-count cap is
+ * applied. Only when no salutation was found does the search fall back to the
+ * first {@link MAX_SUBJECT_SEARCH_LINES} non-empty lines.
  * @param lines the non-empty lines of the cover letter, in document order
  * @param salutationPosition index of the salutation **within `lines`** — a
  * position, not an `allLines` index. Omit it when no salutation was found.
@@ -32,10 +34,7 @@ function findSubjectLine(
     lines: IndexedLine[],
     salutationPosition?: number,
 ): IndexedLine | undefined {
-    const upperSearchBound = Math.min(
-        salutationPosition ?? MAX_SUBJECT_SEARCH_LINES,
-        MAX_SUBJECT_SEARCH_LINES,
-    );
+    const upperSearchBound = salutationPosition ?? MAX_SUBJECT_SEARCH_LINES;
     return lines.find(
         (line, position) =>
             position < upperSearchBound &&
