@@ -5,8 +5,8 @@ export function isCoverLetterTextSegments(
     value: unknown,
 ): value is CoverLetterSegments {
     if (typeof value !== 'object' || value === null) return false;
-    const record = value as Record<string, unknown>;
+    const candidate = value as Record<string, unknown>;
     return COVER_LETTER_SEGMENT_NAMES.every(
-        (name) => name in record && typeof record[name] === 'string',
+        (segmentName) => typeof candidate[segmentName] === 'string',
     );
 }
