@@ -12,23 +12,36 @@ const SALUTATION_PATTERN =
 const GREETINGS_PATTERN =
     /^(?:mit freundlichen gr(?:ü|ue)ßen|freundliche gr(?:ü|ue)ße|viele gr(?:ü|ue)ße|herzliche gr(?:ü|ue)ße|beste gr(?:ü|ue)ße|kind regards|best regards|sincerely|yours faithfully|yours sincerely|regards)\b/iu;
 const SENTENCE_BOUNDARY_PATTERN = /(?<=[.!?])\s+/u;
+const MAX_SUBJECT_SEARCH_LINES = 5;
 
 type IndexedLine = {
     text: string;
     index: number;
 };
 
+/**
+ * A function that finds the subject line of a cover letter. It only searches the
+ * lines above the salutation, and never further than the first
+ * {@link MAX_SUBJECT_SEARCH_LINES} non-empty lines.
+ * @param lines the non-empty lines of the cover letter, in document order
+ * @param salutationPosition index of the salutation **within `lines`** — a
+ * position, not an `allLines` index. Omit it when no salutation was found.
+ * @returns the subject line, or `undefined` if there is none
+ */
 function findSubjectLine(
     lines: IndexedLine[],
-    salutationIndex?: number,
+    salutationPosition?: number,
 ): IndexedLine | undefined {
-    const upperSearchBound = salutationIndex ?? Math.min(lines.length, 5);
-    return lines.find((line, position) =>
-        position >= upperSearchBound || position > 4
-            ? false
-            : SUBJECT_PREFIX_PATTERN.test(line.text) ||
-              (line.text.length <= 180 &&
-                  SUBJECT_KEYWORD_PATTERN.test(line.text)),
+    const upperSearchBound = Math.min(
+        salutationPosition ?? MAX_SUBJECT_SEARCH_LINES,
+        MAX_SUBJECT_SEARCH_LINES,
+    );
+    return lines.find(
+        (line, position) =>
+            position < upperSearchBound &&
+            (SUBJECT_PREFIX_PATTERN.test(line.text) ||
+                (line.text.length <= 180 &&
+                    SUBJECT_KEYWORD_PATTERN.test(line.text))),
     );
 }
 
@@ -161,13 +174,22 @@ export function segmentCoverLetterHeuristically(
     const nonEmptyLines = allLines
         .map<IndexedLine>((text, index) => ({ text, index }))
         .filter((line) => line.text.length > 0);
-    const salutationLine = nonEmptyLines.find((line) =>
+    // Position within nonEmptyLines, not an allLines index — findSubjectLine bounds
+    // its scan by iteration position, so it needs this rather than salutationLine.index.
+    const salutationPosition = nonEmptyLines.findIndex((line) =>
         SALUTATION_PATTERN.test(line.text),
     );
-    const greetingsLine = [...nonEmptyLines]
-        .reverse()
-        .find((line) => GREETINGS_PATTERN.test(line.text));
-    const subjectLine = findSubjectLine(nonEmptyLines, salutationLine?.index);
+    const salutationLine =
+        salutationPosition === -1
+            ? undefined
+            : nonEmptyLines[salutationPosition];
+    const greetingsLine = nonEmptyLines.findLast((line) =>
+        GREETINGS_PATTERN.test(line.text),
+    );
+    const subjectLine = findSubjectLine(
+        nonEmptyLines,
+        salutationPosition === -1 ? undefined : salutationPosition,
+    );
     const hasOrderedMarkers =
         salutationLine !== undefined &&
         greetingsLine !== undefined &&
@@ -178,14 +200,11 @@ export function segmentCoverLetterHeuristically(
           ? subjectLine.index + 1
           : 0;
     const bodyEndIndex = greetingsLine?.index ?? allLines.length;
+    // No subject-line filter needed here: findSubjectLine only ever looks above the
+    // salutation, so subjectLine.index is always below bodyStartIndex.
     const bodyParagraphs = splitParagraphs(
         bodyStartIndex < bodyEndIndex
-            ? allLines
-                  .slice(bodyStartIndex, bodyEndIndex)
-                  .filter(
-                      (_, relativeIndex) =>
-                          bodyStartIndex + relativeIndex !== subjectLine?.index,
-                  )
+            ? allLines.slice(bodyStartIndex, bodyEndIndex)
             : [],
     );
     const bodySegments = buildBodySegments(bodyParagraphs);

@@ -1,0 +1,129 @@
+import { test } from 'node:test';
+import assert from 'node:assert';
+// Static import is safe here (unlike test/index.test.ts): this module only has
+// type-only imports, so it never evaluates src/llm.ts and needs no API key.
+import { segmentCoverLetterHeuristically } from '../src/coverLetterSegmentation/segmentCoverLetterHeuristically.js';
+
+test('does not mistake an introduction for a subject line when a letterhead precedes the salutation', () => {
+    // The salutation sits at nonEmptyLines position 2 but allLines index 4, so a
+    // bound taken from the allLines index would let the subject scan run past it
+    // into the body and swallow the introduction.
+    const input = [
+        'Max Mustermann',
+        '',
+        'Musterstadt, 1. Januar 2026',
+        '',
+        'Sehr geehrte Frau Muster,',
+        '',
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+        '',
+        'Ich arbeite seit fünf Jahren in der Softwareentwicklung.',
+        '',
+        'Über eine Einladung zum Gespräch freue ich mich sehr.',
+        '',
+        'Mit freundlichen Grüßen',
+        'Max Mustermann',
+    ].join('\n');
+
+    const { segments, confidence, fallbackReason } =
+        segmentCoverLetterHeuristically(input);
+
+    // The wrong subject also collapsed the body to two paragraphs and scored 0.75,
+    // so pin the score too — not just the segments.
+    assert.strictEqual(fallbackReason, undefined);
+    assert.strictEqual(confidence, 0.95);
+    assert.strictEqual(segments.subject, '');
+    assert.strictEqual(
+        segments.introduction,
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+    );
+    assert.strictEqual(
+        segments.mainBody,
+        'Ich arbeite seit fünf Jahren in der Softwareentwicklung.',
+    );
+    assert.strictEqual(
+        segments.conclusion,
+        'Über eine Einladung zum Gespräch freue ich mich sehr.',
+    );
+});
+
+test('still finds a genuine subject line on the non-empty line before the salutation', () => {
+    const input = [
+        'Betreff: Bewerbung als Entwicklerin',
+        '',
+        'Sehr geehrte Frau Muster,',
+        '',
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+        '',
+        'Ich arbeite seit fünf Jahren in der Softwareentwicklung.',
+        '',
+        'Über eine Einladung zum Gespräch freue ich mich sehr.',
+        '',
+        'Mit freundlichen Grüßen',
+        'Max Mustermann',
+    ].join('\n');
+
+    const { segments, confidence, fallbackReason } =
+        segmentCoverLetterHeuristically(input);
+
+    assert.strictEqual(fallbackReason, undefined);
+    assert.strictEqual(confidence, 0.95);
+    assert.strictEqual(segments.subject, 'Betreff: Bewerbung als Entwicklerin');
+    assert.strictEqual(segments.salutation, 'Sehr geehrte Frau Muster,');
+    assert.strictEqual(
+        segments.introduction,
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+    );
+});
+
+test('disables the subject scan when the salutation is the first non-empty line', () => {
+    // Boundary case: salutationPosition is 0, so the search bound must be 0 too.
+    // A `||`-for-`??` slip, or a truthiness guard at the call site, re-opens the
+    // scan here and lets the introduction be picked up as the subject.
+    const input = [
+        'Sehr geehrte Frau Muster,',
+        '',
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+        '',
+        'Ich arbeite seit fünf Jahren in der Softwareentwicklung.',
+        '',
+        'Über eine Einladung zum Gespräch freue ich mich sehr.',
+        '',
+        'Mit freundlichen Grüßen',
+        'Max Mustermann',
+    ].join('\n');
+
+    const { segments } = segmentCoverLetterHeuristically(input);
+
+    assert.strictEqual(segments.subject, '');
+    assert.strictEqual(segments.salutation, 'Sehr geehrte Frau Muster,');
+    assert.strictEqual(
+        segments.introduction,
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+    );
+});
+
+test('falls back to the leading-lines bound when there is no salutation', () => {
+    // The subject sits at nonEmptyLines position 2, behind a letterhead, so this
+    // actually pins a fallback bound greater than 1.
+    const input = [
+        'Max Mustermann',
+        '',
+        'Musterstadt, 1. Januar 2026',
+        '',
+        'Betreff: Bewerbung als Entwicklerin',
+        '',
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+        '',
+        'Über eine Einladung zum Gespräch freue ich mich sehr.',
+        '',
+        'Mit freundlichen Grüßen',
+        'Max Mustermann',
+    ].join('\n');
+
+    const { segments, fallbackReason } = segmentCoverLetterHeuristically(input);
+
+    assert.strictEqual(segments.subject, 'Betreff: Bewerbung als Entwicklerin');
+    assert.strictEqual(segments.salutation, '');
+    assert.strictEqual(fallbackReason, 'salutation not found');
+});

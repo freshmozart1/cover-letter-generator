@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-08-09
+
+### Fixed
+
+- `segmentCoverLetterHeuristically` bounded its subject-line search with the
+  salutation's index into the _raw_ line array, but compared it against the
+  iteration position within the _non-empty_ line array. On any letter with a
+  letterhead or blank lines above the salutation — near-universal in German
+  cover letters — that bound was too loose, so the search ran past the
+  salutation into the body. Since the subject keyword pattern matches everyday
+  words (`stelle`, `bewerbung`, `position`), the introduction paragraph could be
+  reported as `subject` and was then dropped from the body entirely. The bound
+  is now the salutation's position within the non-empty lines (closes #12).
+
+### Changed
+
+- Internal-only cleanups in `segmentCoverLetterHeuristically`, all
+  behavior-preserving: the body slice no longer filters out the subject line
+  (unreachable now that the search never looks below the salutation), the two
+  overlapping search caps collapsed into a single `MAX_SUBJECT_SEARCH_LINES`
+  constant, `findSubjectLine` gained JSDoc documenting which coordinate system
+  its bound uses, and the greetings lookup uses `Array.prototype.findLast`
+  instead of copying and reversing the array.
+
 ## [0.4.3] - 2026-08-09
 
 ### Changed
