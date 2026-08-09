@@ -1,7 +1,7 @@
 import type { CoverLetter, Job } from './types';
 import { SEGMENTS_SCHEMA } from './segmentsSchema';
 import { openAI, parseCoverLetterSegmentsResponse } from './llm';
-import { COVER_LETTER_SEGMENT_NAMES } from './constants';
+import { COVER_LETTER_SEGMENT_NAMES } from './constants/segmentNames';
 import { embedCoverLetterSegments } from './embedCoverLetterSegments';
 import { jobToText } from './jobToText';
 
