@@ -1,6 +1,6 @@
 import { embed } from './embed';
 import { CoverLetter, CoverLetterSegments } from './types';
-import { COVER_LETTER_SEGMENT_NAMES } from './constants';
+import { COVER_LETTER_SEGMENT_NAMES } from './constants/segmentNames';
 
 /**
  *Creates a cover letter by embedding the segments of the cover letter.

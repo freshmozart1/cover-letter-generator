@@ -1,4 +1,4 @@
-import { COVER_LETTER_SEGMENT_NAMES } from '../constants';
+import { COVER_LETTER_SEGMENT_NAMES } from '../constants/segmentNames';
 import type { CoverLetterSegments } from '../types';
 
 export function isCoverLetterTextSegments(
