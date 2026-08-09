@@ -26,7 +26,7 @@ There's no combined "check everything" script — use the `/verify` skill for th
 - Prettier: single quotes, 4-space indentation (`.prettierrc` — both differ from Prettier defaults).
 - TypeScript strict mode plus `noUncheckedIndexedAccess` — indexed array/object access is typed as possibly `undefined`, so expect and preserve the defensive `?? ` / existence checks already present in `src/`.
 - `type: "commonjs"` in `package.json` despite `module`/`moduleResolution: "nodenext"` in `tsconfig.json` — this is intentional, not a bug to "fix".
-- Two tsconfig files: `tsconfig.json` builds `src/` only (`rootDir: "src"`, used for `dist/` emit). `tsconfig.test.json` extends it and widens `rootDir` to `.` purely so `test/**` can be typechecked (`--noEmit`) without affecting the real build's output layout.
+- Two tsconfig files: `tsconfig.json` builds `src/` only (`rootDir: "src"`, used for `dist/` emit). `tsconfig.test.json` extends it, sets `noEmit: true`, and widens `rootDir` to `.` so `test/**` can be typechecked without affecting the real build's output layout.
 
 ## Environment
 
