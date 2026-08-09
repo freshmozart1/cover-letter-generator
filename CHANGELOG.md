@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-09
+
+### Added
+
+- CI workflow (`.github/workflows/ci.yml`) runs `npm run lint`, `npm run typecheck`,
+  `npm test`, and `npm run build` on every push and pull request to `main`
+  (closes #3).
+
+### Changed
+
+- Internal-only refactor: `isCoverLetterTextSegments` now derives its field
+  checks from `COVER_LETTER_SEGMENT_NAMES` instead of repeating each segment
+  name by hand, reducing cyclomatic complexity flagged by static analysis. No
+  public API, export, or runtime behavior changed.
+
 ## [0.4.0] - 2026-08-08
 
 ### Added
