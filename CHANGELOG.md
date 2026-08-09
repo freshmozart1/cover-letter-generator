@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-08-09
+
+### Fixed
+
+- `embedCoverLetterSegments` crashed whenever a segment's text was empty or
+  whitespace-only (e.g. a `subject` the heuristic segmenter couldn't find, or
+  the README's own Quick-start example) — OpenAI's embeddings API rejects
+  empty strings with a 400. Such segments are now skipped before the API call
+  and returned as `{ text }` with no `embedding` key instead of throwing; if
+  every segment is empty, the API isn't called at all. `CoverLetter`'s
+  per-segment `embedding` field is now optional to reflect this (closes #9).
+
 ## [0.4.4] - 2026-08-09
 
 ### Fixed
