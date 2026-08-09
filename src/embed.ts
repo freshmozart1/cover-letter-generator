@@ -1,4 +1,3 @@
-import OpenAI from 'openai';
 import { TextEmbedding } from './types';
 import { openAI } from './llm';
 
