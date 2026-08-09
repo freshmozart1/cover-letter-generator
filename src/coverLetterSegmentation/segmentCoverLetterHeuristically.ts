@@ -20,9 +20,10 @@ type IndexedLine = {
 
 function findSubjectLine(
     lines: IndexedLine[],
-    salutationIndex?: number,
+    // A position within `lines`, not an `allLines` index.
+    salutationPosition?: number,
 ): IndexedLine | undefined {
-    const upperSearchBound = salutationIndex ?? Math.min(lines.length, 5);
+    const upperSearchBound = salutationPosition ?? Math.min(lines.length, 5);
     return lines.find((line, position) =>
         position >= upperSearchBound || position > 4
             ? false
@@ -161,13 +162,19 @@ export function segmentCoverLetterHeuristically(
     const nonEmptyLines = allLines
         .map<IndexedLine>((text, index) => ({ text, index }))
         .filter((line) => line.text.length > 0);
-    const salutationLine = nonEmptyLines.find((line) =>
+    // Position within nonEmptyLines, not an allLines index — findSubjectLine bounds
+    // its scan by iteration position, so it needs this rather than salutationLine.index.
+    const salutationPosition = nonEmptyLines.findIndex((line) =>
         SALUTATION_PATTERN.test(line.text),
     );
+    const salutationLine = nonEmptyLines[salutationPosition];
     const greetingsLine = [...nonEmptyLines]
         .reverse()
         .find((line) => GREETINGS_PATTERN.test(line.text));
-    const subjectLine = findSubjectLine(nonEmptyLines, salutationLine?.index);
+    const subjectLine = findSubjectLine(
+        nonEmptyLines,
+        salutationLine ? salutationPosition : undefined,
+    );
     const hasOrderedMarkers =
         salutationLine !== undefined &&
         greetingsLine !== undefined &&
