@@ -360,6 +360,8 @@ npm run format       # prettier --write .
 
 There is no single "check everything" script. Run all four gates in order — `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` — before opening a PR.
 
+CI (`.github/workflows/ci.yml`) runs the same four gates automatically on every push and pull request to `main`.
+
 ### Project conventions
 
 - **Formatting:** Prettier with single quotes and 4-space indentation (`.prettierrc`) — both differ from Prettier's defaults.

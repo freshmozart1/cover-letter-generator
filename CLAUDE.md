@@ -36,3 +36,4 @@ There's no combined "check everything" script — use the `/verify` skill for th
 ## Git workflow
 
 - Work on a feature branch and open a PR for review — do not commit directly to `main`.
+- CI (`.github/workflows/ci.yml`) runs lint, typecheck, test, and build automatically on every push/PR to `main`.
