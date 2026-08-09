@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-08-08
+## [0.4.0] - 2026-08-08
 
 ### Added
 
@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dependencies directly from their source modules instead of through the
   barrel, and the barrel's now-unused re-exports were removed. No public API,
   export, or runtime behavior changed.
+
+## [0.3.0] - 2026-08-08
+
+### Added
+
+- `embedJob(job)`, exported from the package entry point, embeds a job posting using the same `jobToText` text representation `generateCoverLetter` uses internally, so the resulting vector is comparable to letters embedded by `embedCoverLetterSegments`. `jobToText` was extracted from `src/generate.ts` into its own module (`src/jobToText.ts`) to be shared by both (closes #5).
 
 ## [0.2.1] - 2026-08-08
 

@@ -3,22 +3,11 @@ import { SEGMENTS_SCHEMA } from './segmentsSchema';
 import { openAI, parseCoverLetterSegmentsResponse } from './llm';
 import { COVER_LETTER_SEGMENT_NAMES } from './constants';
 import { embedCoverLetterSegments } from './embedCoverLetterSegments';
+import { jobToText } from './jobToText';
 
 const GENERATOR_MODEL = 'gpt-5.6-sol';
 const GENERATOR_INSTRUCTIONS = `You are an experienced career counselor who crafts professional, authentic cover letters.
 You carefully analyze sample cover letters to identify and incorporate the writer’s writing style, tone, and personal characteristics.`;
-
-/**
- * A function to convert jobs into strings.
- * @param job The job thats needs to be converted to a string.
- * @returns The converted job
- */
-function jobToText(job: Job): string {
-    return `Job Title: ${job.title}
-Company: ${job.company}
-Location: ${job.location ?? 'Not specified'}
-Description: ${job.description ?? 'Not specified'}`;
-}
 
 /**
  * A function to convert cover letters into strings.

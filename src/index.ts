@@ -11,3 +11,4 @@ export {
 } from './coverLetterSegmentation';
 export type { SegmentationResult } from './coverLetterSegmentation';
 export { generateCoverLetter } from './generate';
+export { embedJob } from './embedJob';
