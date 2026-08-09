@@ -1,10 +1,7 @@
-import {
-    normalizeCoverLetterText,
-    openAI,
-    SEGMENTS_SCHEMA,
-    type CoverLetterSegments,
-    parseCoverLetterSegmentsResponse,
-} from '.';
+import { normalizeCoverLetterText } from '../normalize';
+import { openAI, parseCoverLetterSegmentsResponse } from '../llm';
+import { SEGMENTS_SCHEMA } from '../segmentsSchema';
+import { type CoverLetterSegments } from './types';
 
 const FALLBACK_MODEL = 'gpt-5.6-luna';
 const FALLBACK_INSTRUCTIONS =

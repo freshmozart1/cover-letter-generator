@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.3.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.4.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -29,7 +29,7 @@ The library is built around a four-stage pipeline.
 | 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity, and the top _x_ are returned sorted by score.                                                                                                                                                                                                                                   | `src/getTopX.ts`                           |
 | 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-5.6-sol` through OpenAI's Responses API, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`.                                                                                                                                                                           | `src/generate.ts`, `src/segmentsSchema.ts` |
 
-Stages 2-4 are exported from the package entry point, along with `embedJob`, which produces the `TextEmbedding` that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. Stage 1 currently exists in `src/` but is not re-exported — see [Known limitations](#known-limitations).
+All four stages are exported from the package entry point, along with `embedJob`, which produces the `TextEmbedding` that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. See [API reference](#api-reference).
 
 ## Requirements
 
@@ -258,6 +258,14 @@ function embedCoverLetterSegments(
 
 Embeds all six segments in a single OpenAI request and pairs each text with its vector. Throws if the API returns fewer embeddings than segments.
 
+#### `segmentCoverLetter(input)`
+
+```ts
+function segmentCoverLetter(input: string): Promise<SegmentationResult>;
+```
+
+Splits a raw cover letter string into the six segments (stage 1 of the pipeline). Tries a fast regex-based heuristic first; if the confidence score indicates a problem (no salutation, markers out of order, body not splittable…), falls back to the `gpt-5.6-luna` model, which is additionally validated to only return text present in the source. Returns a `SegmentationResult` recording which path produced the segments.
+
 #### `normalizeCoverLetterText(input)`
 
 ```ts
@@ -310,6 +318,14 @@ type CoverLetterSegmentName =
 // Plain text, before embedding.
 type CoverLetterSegments = Record<CoverLetterSegmentName, string>;
 
+// Return type of segmentCoverLetter — records which segmentation path was used.
+type SegmentationResult = {
+    segments: CoverLetterSegments;
+    confidence: number;
+    fallbackReason?: string;
+    source: 'heuristic' | 'llm';
+};
+
 // Text paired with its embedding vector — the working unit of the library.
 type CoverLetter = Record<
     CoverLetterSegmentName,
@@ -328,7 +344,6 @@ type Job = {
 
 ## Known limitations
 
-- **Stage 1 is not part of the public API.** `segmentCoverLetter` (heuristic parsing with LLM fallback) lives in `src/coverLetterSegmentation/` but is not re-exported from `src/index.ts`. Until it is, supply `CoverLetterSegments` yourself, or use `parseCoverLetterSegmentsResponse` with your own model call.
 - **Every call costs OpenAI tokens.** `embedCoverLetterSegments`, `embedJob`, and `generateCoverLetter` all hit the API; cache embedded letters rather than recomputing them per job.
 - **Heuristic segmentation is tuned for German and English** salutation/greeting conventions; other languages will usually take the LLM fallback path.
 
