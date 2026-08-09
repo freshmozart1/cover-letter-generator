@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.6] - 2026-08-09
+## [0.4.7] - 2026-08-09
 
 ### Changed
 
@@ -18,6 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mid-initialization. Those imports now point directly at the file that
   defines the symbol, `src/constants/segmentNames.ts` (closes #11). No public
   API, export, or runtime behavior changed.
+
+## [0.4.6] - 2026-08-09
+
+### Fixed
+
+- `findSubjectLine` capped its subject-line search at `MAX_SUBJECT_SEARCH_LINES`
+  (5 non-empty lines) even when the salutation was found further down — even
+  though the salutation's position is already an exact, correct bound. On
+  German cover letters with a long recipient block preceding the salutation
+  (sender name, street, city, company, department — 5 lines is common), this
+  silently dropped a genuine `Betreff:` subject line: no `fallbackReason` was
+  set and confidence stayed at 0.95, so the LLM fallback never triggered. The
+  search's upper bound is now `salutationPosition ?? MAX_SUBJECT_SEARCH_LINES`
+  — the line-count cap only applies when no salutation was found (closes #22).
 
 ## [0.4.5] - 2026-08-09
 

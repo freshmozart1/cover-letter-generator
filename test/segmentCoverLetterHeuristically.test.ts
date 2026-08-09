@@ -103,6 +103,40 @@ test('disables the subject scan when the salutation is the first non-empty line'
     );
 });
 
+test('still finds a genuine subject line behind a long recipient block, past MAX_SUBJECT_SEARCH_LINES', () => {
+    // Five consecutive non-empty lines of recipient block (sender name, street,
+    // city, company name, department) push "Betreff:" to nonEmptyLines position
+    // 5 — at or beyond the old MAX_SUBJECT_SEARCH_LINES(5) cap, which would have
+    // excluded it via `Math.min(salutationPosition, MAX_SUBJECT_SEARCH_LINES)`.
+    // The salutation sits at position 6, which is a bigger, still-correct bound.
+    const input = [
+        'Max Mustermann',
+        'Musterstraße 1',
+        '12345 Musterstadt',
+        'Beispiel GmbH',
+        'Personalabteilung',
+        'Betreff: Bewerbung als Entwicklerin',
+        '',
+        'Sehr geehrte Frau Muster,',
+        '',
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+        '',
+        'Ich arbeite seit fünf Jahren in der Softwareentwicklung.',
+        '',
+        'Über eine Einladung zum Gespräch freue ich mich sehr.',
+        '',
+        'Mit freundlichen Grüßen',
+        'Max Mustermann',
+    ].join('\n');
+
+    const { segments, confidence, fallbackReason } =
+        segmentCoverLetterHeuristically(input);
+
+    assert.strictEqual(segments.subject, 'Betreff: Bewerbung als Entwicklerin');
+    assert.strictEqual(fallbackReason, undefined);
+    assert.strictEqual(confidence, 0.95);
+});
+
 test('falls back to the leading-lines bound when there is no salutation', () => {
     // The subject sits at nonEmptyLines position 2, behind a letterhead, so this
     // actually pins a fallback bound greater than 1.
