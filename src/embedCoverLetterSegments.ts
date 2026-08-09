@@ -10,20 +10,23 @@ import { COVER_LETTER_SEGMENT_NAMES } from './constants';
 export async function embedCoverLetterSegments(
     segments: CoverLetterSegments,
 ): Promise<CoverLetter> {
-    const embeddings = await embed(
-        COVER_LETTER_SEGMENT_NAMES.map((name) => segments[name]),
-    );
-    return COVER_LETTER_SEGMENT_NAMES.reduce((coverLetter, name, index) => {
-        const embedding = embeddings[index];
-        if (embedding)
-            coverLetter[name] = {
-                text: segments[name],
-                embedding,
-            };
-        else
+    const textsToEmbed = COVER_LETTER_SEGMENT_NAMES.map(
+        (name) => segments[name],
+    ).filter((text) => text !== '');
+    const embeddings = textsToEmbed.length ? await embed(textsToEmbed) : [];
+    let embeddingIndex = 0;
+    return COVER_LETTER_SEGMENT_NAMES.reduce((coverLetter, name) => {
+        const text = segments[name];
+        if (text === '') {
+            coverLetter[name] = { text };
+            return coverLetter;
+        }
+        const embedding = embeddings[embeddingIndex++];
+        if (!embedding)
             throw new Error(
                 `Missing embedding for cover letter segment: ${name}`,
             );
+        coverLetter[name] = { text, embedding };
         return coverLetter;
     }, {} as CoverLetter);
 }

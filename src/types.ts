@@ -10,7 +10,7 @@ export type CoverLetter = Record<
     CoverLetterSegmentName,
     {
         text: string;
-        embedding: TextEmbedding;
+        embedding?: TextEmbedding;
     }
 >;
 export type CoverLetterSegments = Record<CoverLetterSegmentName, string>;
