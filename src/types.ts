@@ -15,6 +15,10 @@ export type CoverLetter = Record<
 >;
 export type CoverLetterSegments = Record<CoverLetterSegmentName, string>;
 export type SimilarityWeights = Record<keyof CoverLetter, number>;
+export type CoverLetterSimilarityMatch = {
+    coverLetter: CoverLetter;
+    similarity: number;
+};
 export type Job = {
     title: string;
     company: string;

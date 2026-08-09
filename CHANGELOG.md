@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-08-09
+
+### Fixed
+
+- `getTopXSimilarCoverLetters`'s JSDoc incorrectly claimed it returns cover
+  letters; it actually returns `{ coverLetter, similarity }` pairs. The JSDoc
+  now describes the correct shape, and the function's previously inferred
+  return type is now explicitly annotated as `Promise<CoverLetterSimilarityMatch[]>`,
+  a new type exported from `src/types.ts` (closes #6).
+
 ## [0.4.1] - 2026-08-09
 
 ### Added

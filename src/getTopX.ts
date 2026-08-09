@@ -1,6 +1,7 @@
 import type {
     CoverLetter,
     CoverLetterSegmentName,
+    CoverLetterSimilarityMatch,
     SimilarityWeights,
     TextEmbedding,
 } from './types';
@@ -34,12 +35,12 @@ function calculateWeightedCoverLetterSimilarity(
 }
 
 /**
- * Returns the top x coverletters that match closest with the job embedding, sorted by their cosine similarity.
- * @param x The number of coverletters to return
+ * Returns the top x `{ coverLetter, similarity }` pairs whose cover letters match closest with the job embedding, sorted by descending cosine similarity.
+ * @param x The number of coverletters to return. Must be a non-negative integer.
  * @param jobEmbedding The embedded job against whom the coverletters should be compared
  * @param coverLetters The coverletters that should be compared
  * @param similarityWeights optional weight multipliers for the separate segments of the cover letters.
- * @returns an array of x coverletters that match closest with the job embedding, sorted by their cosine similarity.
+ * @returns an array of up to x `{ coverLetter, similarity }` pairs, sorted by descending cosine similarity.
  */
 export async function getTopXSimilarCoverLetters(
     x: number,
@@ -53,7 +54,7 @@ export async function getTopXSimilarCoverLetters(
         conclusion: 0.2,
         greetings: 0.02,
     },
-) {
+): Promise<CoverLetterSimilarityMatch[]> {
     return coverLetters
         .map((coverLetter) => ({
             coverLetter,

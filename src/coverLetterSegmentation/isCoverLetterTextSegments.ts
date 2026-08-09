@@ -1,5 +1,5 @@
-import type { CoverLetterSegments } from '../types';
 import { COVER_LETTER_SEGMENT_NAMES } from '../constants';
+import type { CoverLetterSegments } from '../types';
 
 export function isCoverLetterTextSegments(
     value: unknown,
