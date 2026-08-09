@@ -12,12 +12,12 @@ export async function embedCoverLetterSegments(
 ): Promise<CoverLetter> {
     const textsToEmbed = COVER_LETTER_SEGMENT_NAMES.map(
         (name) => segments[name],
-    ).filter((text) => text !== '');
+    ).filter((text) => text.trim() !== '');
     const embeddings = textsToEmbed.length ? await embed(textsToEmbed) : [];
     let embeddingIndex = 0;
     return COVER_LETTER_SEGMENT_NAMES.reduce((coverLetter, name) => {
         const text = segments[name];
-        if (text === '') {
+        if (text.trim() === '') {
             coverLetter[name] = { text };
             return coverLetter;
         }

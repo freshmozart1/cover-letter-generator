@@ -359,7 +359,7 @@ type Job = {
 npm install          # requires the allow-git=root line in .npmrc
 npm run build        # tsc -p tsconfig.json → dist/
 npm run typecheck    # tsc --noEmit on both tsconfig.json and tsconfig.test.json
-npm test             # node --import tsx --test "test/*.test.ts"
+npm test             # node --experimental-test-module-mocks --import tsx --test "test/*.test.ts"
 npm run lint         # eslint .
 npm run format       # prettier --write .
 ```
