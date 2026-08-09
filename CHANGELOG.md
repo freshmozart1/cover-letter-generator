@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-08-09
+
+### Changed
+
+- Internal-only refactor: `isCoverLetterTextSegments`, `embedCoverLetterSegments`,
+  and `generate` imported `COVER_LETTER_SEGMENT_NAMES` through the
+  `src/constants` barrel (`./constants` / `../constants`), which risks
+  partial-module reads under CommonJS if the barrel cycle is ever entered
+  mid-initialization. Those imports now point directly at the file that
+  defines the symbol, `src/constants/segmentNames.ts` (closes #11). No public
+  API, export, or runtime behavior changed.
+
 ## [0.4.5] - 2026-08-09
 
 ### Fixed
