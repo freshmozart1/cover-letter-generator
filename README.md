@@ -25,7 +25,7 @@ The library is built around a four-stage pipeline.
 | #   | Stage        | What happens                                                                                                                                                                                                                                                                                                                                                                                       | Key source                                 |
 | --- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | 1   | **Segment**  | An existing cover letter is normalized (mojibake repair, whitespace/newline cleanup) and split into the six segments by regex heuristics. The result is scored for confidence; if the score indicates a problem (no salutation, markers out of order, body not splittable…), it falls back to the `gpt-5.6-luna` model, which is additionally validated to only return text present in the source. | `src/coverLetterSegmentation/`             |
-| 2   | **Embed**    | Each of the six segments is embedded with OpenAI `text-embedding-3-small`, producing a `CoverLetter` — text plus embedding vector per segment.                                                                                                                                                                                                                                                     | `src/embedCoverLetterSegments.ts`          |
+| 2   | **Embed**    | Each non-empty segment is embedded with OpenAI `text-embedding-3-small`, producing a `CoverLetter` — text plus embedding vector per segment. A segment that is empty or whitespace-only (e.g. a subject the heuristic segmenter couldn't find) keeps its text with no embedding, instead of being sent to the API.                                                                                 | `src/embedCoverLetterSegments.ts`          |
 | 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity, and the top _x_ are returned sorted by score.                                                                                                                                                                                                                                   | `src/getTopX.ts`                           |
 | 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-5.6-sol` through OpenAI's Responses API, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`.                                                                                                                                                                           | `src/generate.ts`, `src/segmentsSchema.ts` |
 
@@ -256,7 +256,7 @@ function embedCoverLetterSegments(
 ): Promise<CoverLetter>;
 ```
 
-Embeds all six segments in a single OpenAI request and pairs each text with its vector. Throws if the API returns fewer embeddings than segments.
+Embeds the non-empty segments in a single OpenAI request and pairs each text with its vector. A segment whose text is empty or whitespace-only (as the heuristic segmenter can produce, e.g. for `subject`) is not sent to the API — it comes back as `{ text }` with no `embedding` key instead of throwing. If every segment is empty, the API is not called at all. Throws if the API returns fewer embeddings than non-empty segments sent.
 
 #### `segmentCoverLetter(input)`
 
@@ -327,9 +327,11 @@ type SegmentationResult = {
 };
 
 // Text paired with its embedding vector — the working unit of the library.
+// `embedding` is omitted for a segment whose text is empty or whitespace-only
+// (e.g. a subject the heuristic segmenter couldn't find).
 type CoverLetter = Record<
     CoverLetterSegmentName,
-    { text: string; embedding: TextEmbedding }
+    { text: string; embedding?: TextEmbedding }
 >;
 
 type SimilarityWeights = Record<CoverLetterSegmentName, number>;
@@ -359,7 +361,7 @@ type Job = {
 npm install          # requires the allow-git=root line in .npmrc
 npm run build        # tsc -p tsconfig.json → dist/
 npm run typecheck    # tsc --noEmit on both tsconfig.json and tsconfig.test.json
-npm test             # node --import tsx --test "test/*.test.ts"
+npm test             # node --experimental-test-module-mocks --import tsx --test "test/*.test.ts"
 npm run lint         # eslint .
 npm run format       # prettier --write .
 ```

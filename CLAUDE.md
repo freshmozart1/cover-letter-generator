@@ -7,14 +7,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `cover-letter-generator` is a TypeScript **library** (not a CLI or server — `main`/`types` point at `dist/`, no `bin` field) that generates AI-tailored cover letters:
 
 1. Segments existing cover letters into 6 parts (`subject`, `salutation`, `introduction`, `mainBody`, `conclusion`, `greetings`) — first via heuristic regex parsing (`src/coverLetterSegmentation/segmentCoverLetterHeuristically.ts`), falling back to an LLM (`gpt-5.6-luna`) when confidence is low.
-2. Embeds each segment via OpenAI embeddings (`text-embedding-3-small`).
+2. Embeds each non-empty segment via OpenAI embeddings (`text-embedding-3-small`); segments that are empty or whitespace-only (e.g. a subject the heuristic couldn't find) keep their text with no embedding.
 3. Ranks stored example cover letters against a target job by weighted per-segment cosine similarity (`src/getTopX.ts`).
 4. Generates a new cover letter with OpenAI's Responses API (`gpt-5.6-sol`) using the most similar examples as style references, against a strict JSON schema (`src/segmentsSchema.ts`).
 
 ## Commands
 
 - Build: `npm run build` (`tsc -p tsconfig.json`)
-- Test: `npm test` (Node's built-in test runner via `node --import tsx --test "test/*.test.ts"` — no Jest/Vitest/Mocha)
+- Test: `npm test` (Node's built-in test runner via `node --experimental-test-module-mocks --import tsx --test "test/*.test.ts"` — no Jest/Vitest/Mocha)
 - Typecheck: `npm run typecheck` (checks both `tsconfig.json` and `tsconfig.test.json`)
 - Lint: `npm run lint` (`eslint .`)
 - Format: `npm run format` (`prettier --write .`)

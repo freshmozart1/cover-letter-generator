@@ -1,6 +1,6 @@
 {
     "name": "cover-letter-generator",
-    "version": "0.4.4",
+    "version": "0.4.5",
     "description": "A package that generates cover letters by using AI",
     "private": true,
     "repository": {
@@ -14,7 +14,7 @@
     ],
     "scripts": {
         "build": "tsc -p tsconfig.json",
-        "test": "node --import tsx --test \"test/*.test.ts\"",
+        "test": "node --experimental-test-module-mocks --import tsx --test \"test/*.test.ts\"",
         "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
         "lint": "eslint .",
         "format": "prettier --write ."
