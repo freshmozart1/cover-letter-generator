@@ -1,4 +1,4 @@
-import type { CoverLetter, CoverLetterSegments, Job } from './types';
+import type { CoverLetter, Job } from './types';
 import { SEGMENTS_SCHEMA } from './segmentsSchema';
 import { openAI, parseCoverLetterSegmentsResponse } from './llm';
 import { COVER_LETTER_SEGMENT_NAMES } from './constants';
@@ -15,16 +15,8 @@ You carefully analyze sample cover letters to identify and incorporate the write
  * @returns The converted cover letter
  */
 function coverLetterToText(coverLetter: CoverLetter): string {
-    const coverLetterSegments: CoverLetterSegments = {
-        subject: coverLetter.subject.text,
-        salutation: coverLetter.salutation.text,
-        introduction: coverLetter.introduction.text,
-        mainBody: coverLetter.mainBody.text,
-        conclusion: coverLetter.conclusion.text,
-        greetings: coverLetter.greetings.text,
-    };
     return COVER_LETTER_SEGMENT_NAMES.map(
-        (segmentName) => coverLetterSegments[segmentName],
+        (segmentName) => coverLetter[segmentName].text,
     )
         .filter((segmentText) => segmentText.trim().length > 0)
         .join(`\n\n`);
