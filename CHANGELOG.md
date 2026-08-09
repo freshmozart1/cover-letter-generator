@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-08-09
+
+### Changed
+
+- Internal-only refactor: `coverLetterToText` now indexes
+  `coverLetter[segmentName].text` directly inside its `.map()`, instead of
+  first building a redundant intermediate `CoverLetterSegments` object. The
+  now-unused `CoverLetterSegments` type import was also removed from
+  `src/generate.ts` (closes #10). No public API, export, or runtime behavior
+  changed.
+
 ## [0.4.2] - 2026-08-09
 
 ### Fixed
