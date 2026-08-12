@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-12
+
+### Added
+
+- `segmentCoverLetter` now has a JSDoc comment documenting its two-stage
+  heuristic-then-LLM-fallback behavior, its `input` parameter, and its
+  `SegmentationResult` return value (closes #31).
+
 ## [0.5.0] - 2026-08-12
 
 ### Added
