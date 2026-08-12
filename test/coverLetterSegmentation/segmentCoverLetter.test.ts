@@ -30,6 +30,10 @@ type LlmSegmentCoverLetterMock = HeuristicSegmentCoverLetterMock & {
     segmentWithLlmSpy: Mock<() => Promise<CoverLetterSegments>>;
 };
 
+// Branching maps 1:1 to the three test scenarios below (heuristic path, LLM
+// fallback path, exports-only smoke test); splitting it up would duplicate the
+// module-mocking setup across each test instead of centralizing it here.
+// fallow-ignore-next-line complexity
 async function segmentCoverLetterMockFactory<
     T extends
         | SegmentCoverLetterMock

@@ -105,12 +105,15 @@ describe('/src/getTopX.ts', () => {
             orthogonalMatch,
             closeMatch,
         ]);
+        const [first, second] = output;
 
         assert.strictEqual(output.length, 2);
-        assert.strictEqual(output[0]?.coverLetter, closeMatch);
-        assert.strictEqual(output[0]?.similarity, 1);
-        assert.strictEqual(output[1]?.coverLetter, orthogonalMatch);
-        assert.strictEqual(output[1]?.similarity, 0);
+        assert.ok(first);
+        assert.ok(second);
+        assert.strictEqual(first.coverLetter, closeMatch);
+        assert.strictEqual(first.similarity, 1);
+        assert.strictEqual(second.coverLetter, orthogonalMatch);
+        assert.strictEqual(second.similarity, 0);
     });
     test('getTopXSimilarCoverLetters() returns an empty array when x is 0 or there are no cover letters', async () => {
         const { getTopXSimilarCoverLetters } =

@@ -15,6 +15,10 @@ import { cosineSimilarity } from 'cosine-similarity';
  * @param similarityWeights The weight multipliers for each segment of the coverletter
  * @returns the weighted similarity between a coverletter and a job embedding vector
  */
+// Exported so its weighting/skip logic can be unit-tested directly
+// (test/getTopX.test.ts); only used internally by getTopXSimilarCoverLetters()
+// otherwise.
+// fallow-ignore-next-line unused-export
 export function calculateWeightedCoverLetterSimilarity(
     jobEmbedding: TextEmbedding,
     coverLetter: CoverLetter,

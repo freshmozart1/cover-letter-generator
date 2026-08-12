@@ -6,16 +6,13 @@ export function isCoverLetterTextSegments(
 ): value is CoverLetterSegments {
     if (typeof value !== 'object' || value === null) return false;
     const candidate = value as Record<string, unknown>;
-    const candidateKeys = Object.keys(candidate);
-    for (const candidateKey of candidateKeys)
-        if (
-            !COVER_LETTER_SEGMENT_NAMES.includes(
-                candidateKey as CoverLetterSegmentName,
-            )
-        )
-            return false;
 
-    return COVER_LETTER_SEGMENT_NAMES.every(
-        (segmentName) => typeof candidate[segmentName] === 'string',
+    return (
+        Object.keys(candidate).every((key) =>
+            COVER_LETTER_SEGMENT_NAMES.includes(key as CoverLetterSegmentName),
+        ) &&
+        COVER_LETTER_SEGMENT_NAMES.every(
+            (segmentName) => typeof candidate[segmentName] === 'string',
+        )
     );
 }
