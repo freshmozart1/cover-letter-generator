@@ -23,6 +23,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CoverLetterSegmentName` is still used internally, it just isn't exported
   from `src/index.ts` anymore (closes #34).
 
+## [0.5.3] - 2026-08-12
+
+### Fixed
+
+- `segmentCoverLetterWithLlm`'s source-containment validation no longer
+  redundantly re-collapses whitespace already normalized by
+  `normalizeCoverLetterText`, while still correctly collapsing newlines so
+  multi-paragraph segments are still validated correctly (closes #29).
+
+## [0.5.2] - 2026-08-12
+
+### Added
+
+- `segmentCoverLetter` now has a JSDoc comment documenting its two-stage
+  heuristic-then-LLM-fallback behavior, its `input` parameter, and its
+  `SegmentationResult` return value (closes #31).
+
+## [0.5.1] - 2026-08-12
+
+### Fixed
+
+- `npm run typecheck` no longer emits a stray `dist/test/` tree and a
+  duplicate `dist/src/` tree — `tsconfig.test.json` now sets `noEmit: true`
+  directly, instead of relying on a comment that (incorrectly) claimed it
+  was already a no-op (closes #24).
+- `build:prod` now removes `dist/` before compiling, so leftover output from
+  `build:dev` or a prior `typecheck` run can no longer end up inside the
+  package's published `files: ["dist"]` surface.
+
 ## [0.5.0] - 2026-08-12
 
 ### Added

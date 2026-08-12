@@ -8,7 +8,7 @@ const FALLBACK_INSTRUCTIONS =
     'Segment the cover letter into the requested fields. Preserve the original wording exactly. Do not summarize, rewrite, translate, or invent content. Return empty strings for sections that are absent.';
 
 function normalizeForContainment(input: string): string {
-    return normalizeCoverLetterText(input).replace(/\s+/g, ' ').trim();
+    return normalizeCoverLetterText(input).replace(/\n+/g, ' ');
 }
 
 function validateSourcePreservingSegments(
