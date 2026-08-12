@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-12
+
+### Added
+
+- `getTopXSimilarCoverLetters` accepts a new optional fifth parameter,
+  `exampleJobs: (TextEmbedding | null)[]`, defaulting to `[]`. Matched by
+  index to `coverLetters`, `exampleJobs[i]` is the embedding of the job that
+  `coverLetters[i]` was originally written for; when present, that letter's
+  weighted segment similarity is additionally multiplied by the cosine
+  similarity between the target `jobEmbedding` and `exampleJobs[i]`. A
+  `null`, missing, or out-of-bounds entry falls back to a multiplier of `1`,
+  so omitting the argument is a no-op and existing callers are unaffected
+  (closes #33).
+
 ## [0.5.0] - 2026-08-12
 
 ### Added

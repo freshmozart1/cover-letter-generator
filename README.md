@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.5.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.6.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -26,7 +26,7 @@ The library is built around a four-stage pipeline.
 | --- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | 1   | **Segment**  | An existing cover letter is normalized (mojibake repair, whitespace/newline cleanup) and split into the six segments by regex heuristics. The result is scored for confidence; if the score indicates a problem (no salutation, markers out of order, body not splittable…), it falls back to the `gpt-5.6-luna` model, which is additionally validated to only return text present in the source. | `src/coverLetterSegmentation/`                       |
 | 2   | **Embed**    | Each non-empty segment is embedded with OpenAI `text-embedding-3-small`, producing a `CoverLetter` — text plus embedding vector per segment. A segment that is empty or whitespace-only (e.g. a subject the heuristic segmenter couldn't find) keeps its text with no embedding, instead of being sent to the API.                                                                                 | `src/embedCoverLetterSegments.ts`                    |
-| 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity, and the top _x_ are returned sorted by score.                                                                                                                                                                                                                                   | `src/getTopX.ts`                                     |
+| 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity — optionally scaled by job-to-job similarity when the letter's original job is known — and the top _x_ are returned sorted by score.                                                                                                                                             | `src/getTopX.ts`                                     |
 | 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-5.6-sol` through OpenAI's Responses API, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`.                                                                                                                                                                           | `src/generate.ts`, `src/constants/segmentsSchema.ts` |
 
 All four stages are exported from the package entry point, along with `embedJob`, which produces the `TextEmbedding` that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. See [API reference](#api-reference).
@@ -181,6 +181,25 @@ for (const { coverLetter, similarity } of matches) {
 }
 ```
 
+### Weighting by job similarity
+
+`getTopXSimilarCoverLetters` also accepts an optional fifth argument: the embedding of the job each letter in `library` was originally written for, matched by index. Pass `null` for any letter whose original job you don't have.
+
+```ts
+// exampleJobEmbeddings[i] is the embedding of the job library[i] was written for.
+const exampleJobEmbeddings = await Promise.all(
+    pastJobs.map((pastJob) => (pastJob ? embedJob(pastJob) : null)),
+);
+
+const matches = await getTopXSimilarCoverLetters(
+    5,
+    jobEmbedding,
+    library,
+    undefined, // keep the default segment weights
+    exampleJobEmbeddings,
+);
+```
+
 ### Parsing a model response yourself
 
 If you call an OpenAI model directly with `SEGMENTS_SCHEMA`, the package's parser validates, normalizes, and narrows the raw output for you.
@@ -237,7 +256,7 @@ function embedJob(job: Job): Promise<TextEmbedding>;
 
 Embeds a job posting using the same text representation (`jobToText`) that `generateCoverLetter` uses internally, so the resulting vector is comparable to letters embedded by `embedCoverLetterSegments`. Use this to produce the `jobEmbedding` argument for `getTopXSimilarCoverLetters`.
 
-#### `getTopXSimilarCoverLetters(x, jobEmbedding, coverLetters, similarityWeights?)`
+#### `getTopXSimilarCoverLetters(x, jobEmbedding, coverLetters, similarityWeights?, exampleJobs?)`
 
 ```ts
 function getTopXSimilarCoverLetters(
@@ -245,6 +264,7 @@ function getTopXSimilarCoverLetters(
     jobEmbedding: TextEmbedding,
     coverLetters: CoverLetter[],
     similarityWeights?: SimilarityWeights,
+    exampleJobs?: (TextEmbedding | null)[],
 ): Promise<CoverLetterSimilarityMatch[]>;
 ```
 
@@ -258,6 +278,8 @@ Returns the `x` highest-scoring letters, **each wrapped with its score** — `ge
 | `mainBody`     | `0.5`  |
 | `conclusion`   | `0.2`  |
 | `greetings`    | `0.02` |
+
+`exampleJobs` is optional and defaults to `[]`. It's matched by index to `coverLetters`: `exampleJobs[i]` is the embedding of the job that `coverLetters[i]` was originally written for. When present, that letter's weighted segment similarity is additionally multiplied by the cosine similarity between `jobEmbedding` and `exampleJobs[i]` — so a letter written for a job close to the target job ranks higher. A `null`, missing, or out-of-bounds entry falls back to a multiplier of `1` (today's unchanged behavior).
 
 #### `embedCoverLetterSegments(segments)`
 
