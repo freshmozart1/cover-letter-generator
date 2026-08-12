@@ -7,14 +7,18 @@ const FALLBACK_MODEL = 'gpt-5.6-luna';
 const FALLBACK_INSTRUCTIONS =
     'Segment the cover letter into the requested fields. Preserve the original wording exactly. Do not summarize, rewrite, translate, or invent content. Return empty strings for sections that are absent.';
 
+function normalizeForContainment(input: string): string {
+    return normalizeCoverLetterText(input).replace(/\n+/g, ' ');
+}
+
 function validateSourcePreservingSegments(
     sourceText: string,
     segments: CoverLetterSegments,
 ): boolean {
-    const normalizedSourceText = normalizeCoverLetterText(sourceText);
+    const normalizedSourceText = normalizeForContainment(sourceText);
 
     return Object.values(segments).every((segmentText) => {
-        const normalizedSegmentText = normalizeCoverLetterText(segmentText);
+        const normalizedSegmentText = normalizeForContainment(segmentText);
         return (
             normalizedSegmentText.length === 0 ||
             normalizedSourceText.includes(normalizedSegmentText)
