@@ -3,6 +3,16 @@ import { segmentCoverLetterHeuristically } from './segmentCoverLetterHeuristical
 import { segmentCoverLetterWithLlm } from './segmentCoverLetterWithLlm';
 import { SegmentationResult } from './types';
 
+/**
+ * A function that segments a cover letter into its parts. It first normalizes
+ * the input text, then attempts heuristic segmentation. If the heuristic
+ * result includes a fallback reason, it falls back to LLM-based segmentation
+ * instead.
+ * @param input the raw cover letter text to segment
+ * @returns a SegmentationResult indicating which strategy ('heuristic' or
+ * 'llm') produced the segments, along with a confidence score and, when
+ * applicable, a fallbackReason
+ */
 export async function segmentCoverLetter(
     input: string,
 ): Promise<SegmentationResult> {
