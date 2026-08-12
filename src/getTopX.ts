@@ -1,3 +1,4 @@
+import { SIMILARITY_WEIGHTS } from './constants/similarityWeights';
 import type {
     CoverLetter,
     CoverLetterSegmentName,
@@ -14,7 +15,7 @@ import { cosineSimilarity } from 'cosine-similarity';
  * @param similarityWeights The weight multipliers for each segment of the coverletter
  * @returns the weighted similarity between a coverletter and a job embedding vector
  */
-function calculateWeightedCoverLetterSimilarity(
+export function calculateWeightedCoverLetterSimilarity(
     jobEmbedding: TextEmbedding,
     coverLetter: CoverLetter,
     similarityWeights: SimilarityWeights,
@@ -46,14 +47,7 @@ export async function getTopXSimilarCoverLetters(
     x: number,
     jobEmbedding: TextEmbedding,
     coverLetters: CoverLetter[],
-    similarityWeights: SimilarityWeights = {
-        subject: 0.06,
-        salutation: 0.02,
-        introduction: 0.2,
-        mainBody: 0.5,
-        conclusion: 0.2,
-        greetings: 0.02,
-    },
+    similarityWeights: SimilarityWeights = SIMILARITY_WEIGHTS,
 ): Promise<CoverLetterSimilarityMatch[]> {
     return coverLetters
         .map((coverLetter) => ({

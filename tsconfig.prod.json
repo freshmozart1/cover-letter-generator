@@ -8,7 +8,5 @@
         // it — harmless here because noEmit means rootDir affects nothing else.
         "rootDir": "src"
     },
-    "include": [
-        "src/**/*.ts"
-    ]
+    "include": ["src/**/*.ts"]
 }

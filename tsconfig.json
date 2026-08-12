@@ -10,19 +10,12 @@
         "module": "nodenext",
         "moduleResolution": "nodenext",
         "target": "es2023",
-        "lib": [
-            "es2023"
-        ],
-        "types": [
-            "node"
-        ],
+        "lib": ["es2023"],
+        "types": ["node"],
         "declaration": true,
         "outDir": "dist",
         "rootDir": ".",
         "sourceMap": true
     },
-    "include": [
-        "test/**/*.ts",
-        "src/**/*.ts"
-    ]
+    "include": ["test/**/*.ts", "src/**/*.ts"]
 }

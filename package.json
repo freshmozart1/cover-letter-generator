@@ -15,7 +15,7 @@
     "scripts": {
         "build:dev": "tsc -p tsconfig.json",
         "build:prod": "tsc -p tsconfig.prod.json",
-        "test": "node --experimental-test-module-mocks --import tsx --test \"test/*.test.ts\"",
+        "test": "OPENAI_API_KEY=test-key node --experimental-test-module-mocks --import tsx --test \"test/**/*.test.ts\"",
         "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
         "lint": "eslint .",
         "format": "prettier --write ."
