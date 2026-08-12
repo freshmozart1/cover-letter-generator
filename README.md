@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.4.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.5.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -87,10 +87,21 @@ import {
     embedJob,
     generateCoverLetter,
     getTopXSimilarCoverLetters,
+    COVER_LETTER_SEGMENT_NAMES,
     type CoverLetter,
     type CoverLetterSegments,
     type Job,
 } from 'cover-letter-generator';
+
+// generateCoverLetter() only needs each example's text, not its embedding.
+function toSegments(coverLetter: CoverLetter): CoverLetterSegments {
+    return Object.fromEntries(
+        COVER_LETTER_SEGMENT_NAMES.map((name) => [
+            name,
+            coverLetter[name].text,
+        ]),
+    ) as CoverLetterSegments;
+}
 
 const job: Job = {
     title: 'Senior Backend Engineer',
@@ -132,7 +143,7 @@ async function main(): Promise<void> {
     // 4. Generate a new letter in the style of the best matches.
     const generated = await generateCoverLetter(
         job,
-        topMatches.map(({ coverLetter }) => coverLetter),
+        topMatches.map(({ coverLetter }) => toSegments(coverLetter)),
     );
 
     console.log(generated.subject.text);
@@ -212,11 +223,11 @@ Everything below is exported from the package root (`src/index.ts`).
 ```ts
 function generateCoverLetter(
     job: Job,
-    exampleCoverLetters: CoverLetter[],
+    exampleCoverLetters: CoverLetterSegments[],
 ): Promise<CoverLetter>;
 ```
 
-Generates a new cover letter for `job` using `exampleCoverLetters` as style references, and returns it already embedded. Instructs the model to match the language of the job posting and to stay under 250 words. Empty segments in the examples are dropped before they are shown to the model.
+Generates a new cover letter for `job` using `exampleCoverLetters` as style references, and returns it already embedded. Instructs the model to match the language of the job posting and to stay under 250 words. Empty segments in the examples are dropped before they are shown to the model. Takes plain `CoverLetterSegments` (text only) rather than embedded `CoverLetter`s — it never needed the embeddings.
 
 #### `embedJob(job)`
 
@@ -237,7 +248,7 @@ function getTopXSimilarCoverLetters(
 ): Promise<CoverLetterSimilarityMatch[]>;
 ```
 
-Returns the `x` highest-scoring letters, **each wrapped with its score** — map over `.coverLetter` before passing the result to `generateCoverLetter`. Default weights:
+Returns the `x` highest-scoring letters, **each wrapped with its score** — `generateCoverLetter` needs `CoverLetterSegments`, not the embedded `.coverLetter` this returns, so extract each segment's `.text` before passing the result along (see [Quick start](#quick-start)). Default weights:
 
 | Segment        | Weight |
 | -------------- | ------ |
@@ -269,10 +280,10 @@ Splits a raw cover letter string into the six segments (stage 1 of the pipeline)
 #### `normalizeCoverLetterText(input)`
 
 ```ts
-function normalizeCoverLetterText(input: string): string;
+function normalizeCoverLetterText(input: string | CoverLetterSegments): string;
 ```
 
-Repairs common German UTF-8 mojibake (`Ã¤` → `ä`, `ÃŸ` → `ß`, …), applies Unicode NFC, converts CRLF to LF, collapses runs of spaces/tabs, trims each line, and reduces three or more consecutive newlines to a blank-line separator.
+Repairs common German UTF-8 mojibake (`Ã¤` → `ä`, `ÃŸ` → `ß`, …), applies Unicode NFC, converts CRLF to LF, collapses runs of spaces/tabs, trims each line, and reduces three or more consecutive newlines to a blank-line separator. Given `CoverLetterSegments`, joins the six segments in canonical order (`subject`, `salutation`, `introduction`, `mainBody`, `conclusion`, `greetings`) before normalizing.
 
 #### `parseCoverLetterSegmentsResponse(aiResponse)`
 
@@ -292,7 +303,7 @@ function isCoverLetterTextSegments(
 ): value is CoverLetterSegments;
 ```
 
-Type guard asserting that `value` is an object with all six segment keys present as strings.
+Type guard asserting that `value` is an object with exactly the six segment keys, each a string — extra properties are rejected.
 
 ### Values
 

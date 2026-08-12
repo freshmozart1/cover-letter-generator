@@ -2,7 +2,10 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "sourceMap": false,
-        "declaration": false,
+        // package.json's "types" field points at dist/index.d.ts, so this build
+        // must keep emitting declarations (the base config already sets
+        // declaration: true) — do not set this to false.
+        "declaration": true,
         // The base config sets rootDir to "." (it also typechecks test/**), which
         // would emit dist/src/*.js here. This program emits (no noEmit), and
         // package.json's main/types point at the flat dist/*.js layout, so narrow
