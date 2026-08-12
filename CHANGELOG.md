@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.6.0] - 2026-08-12
+## [0.7.0] - 2026-08-12
 
 ### Added
 
 - `getTopXSimilarCoverLetters` accepts a new optional fifth parameter,
-  `exampleJobs: (TextEmbedding | null)[]`, defaulting to `[]`. Matched by
+  `exampleJobs: (number[] | null)[]`, defaulting to `[]`. Matched by
   index to `coverLetters`, `exampleJobs[i]` is the embedding of the job that
   `coverLetters[i]` was originally written for; when present, that letter's
   weighted segment similarity is additionally multiplied by the cosine
@@ -20,6 +20,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `null`, missing, or out-of-bounds entry falls back to a multiplier of `1`,
   so omitting the argument is a no-op and existing callers are unaffected
   (closes #33).
+
+## [0.6.0] - 2026-08-12
+
+### Changed
+
+- **Breaking:** `src/index.ts` now exports only the intended public surface —
+  `embedCoverLetterSegments`, `embedJob`, `generateCoverLetter`,
+  `getTopXSimilarCoverLetters`, `COVER_LETTER_SEGMENT_NAMES`, and the types
+  `CoverLetter`, `CoverLetterSegments`, and `Job`. `normalizeCoverLetterText`,
+  `openAI`, `parseCoverLetterSegmentsResponse`, `SEGMENTS_SCHEMA`,
+  `isCoverLetterTextSegments`, `segmentCoverLetter`, and the types
+  `TextEmbedding`, `CoverLetterSegmentName`, `SimilarityWeights`,
+  `CoverLetterSimilarityMatch`, and `SegmentationResult` were never meant to
+  be public API and are no longer exported from the package root.
+  `CoverLetterSegmentName` is still used internally, it just isn't exported
+  from `src/index.ts` anymore (closes #34).
+
+## [0.5.3] - 2026-08-12
+
+### Fixed
+
+- `segmentCoverLetterWithLlm`'s source-containment validation no longer
+  redundantly re-collapses whitespace already normalized by
+  `normalizeCoverLetterText`, while still correctly collapsing newlines so
+  multi-paragraph segments are still validated correctly (closes #29).
+
+## [0.5.2] - 2026-08-12
+
+### Added
+
+- `segmentCoverLetter` now has a JSDoc comment documenting its two-stage
+  heuristic-then-LLM-fallback behavior, its `input` parameter, and its
+  `SegmentationResult` return value (closes #31).
+
+## [0.5.1] - 2026-08-12
+
+### Fixed
+
+- `npm run typecheck` no longer emits a stray `dist/test/` tree and a
+  duplicate `dist/src/` tree — `tsconfig.test.json` now sets `noEmit: true`
+  directly, instead of relying on a comment that (incorrectly) claimed it
+  was already a no-op (closes #24).
+- `build:prod` now removes `dist/` before compiling, so leftover output from
+  `build:dev` or a prior `typecheck` run can no longer end up inside the
+  package's published `files: ["dist"]` surface.
+
+> > > > > > > origin/main
 
 ## [0.5.0] - 2026-08-12
 

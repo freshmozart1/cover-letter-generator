@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.6.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.7.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -29,7 +29,7 @@ The library is built around a four-stage pipeline.
 | 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity — optionally scaled by job-to-job similarity when the letter's original job is known — and the top _x_ are returned sorted by score.                                                                                                                                             | `src/getTopX.ts`                                     |
 | 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-5.6-sol` through OpenAI's Responses API, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`.                                                                                                                                                                           | `src/generate.ts`, `src/constants/segmentsSchema.ts` |
 
-All four stages are exported from the package entry point, along with `embedJob`, which produces the `TextEmbedding` that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. See [API reference](#api-reference).
+Three of these four stages — Embed, Rank, and Generate — are exported from the package entry point, along with `embedJob`, which produces the embedding vector that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. (Stage 1, segmentation, is an internal implementation detail and is not part of the public API.) See [API reference](#api-reference).
 
 ## Requirements
 
@@ -200,37 +200,6 @@ const matches = await getTopXSimilarCoverLetters(
 );
 ```
 
-### Parsing a model response yourself
-
-If you call an OpenAI model directly with `SEGMENTS_SCHEMA`, the package's parser validates, normalizes, and narrows the raw output for you.
-
-```ts
-import {
-    openAI,
-    parseCoverLetterSegmentsResponse,
-    SEGMENTS_SCHEMA,
-    type CoverLetterSegments,
-} from 'cover-letter-generator';
-
-const response = await openAI.responses.create({
-    model: 'gpt-5.6-sol',
-    input: 'Segment this cover letter:\n\n...',
-    text: {
-        format: {
-            type: 'json_schema',
-            name: 'cover_letter_segments',
-            strict: true,
-            schema: SEGMENTS_SCHEMA,
-        },
-    },
-});
-
-// Throws if the model returned anything that isn't all six string fields.
-const segments: CoverLetterSegments = parseCoverLetterSegmentsResponse(
-    response.output_text,
-);
-```
-
 ## API reference
 
 Everything below is exported from the package root (`src/index.ts`).
@@ -251,7 +220,7 @@ Generates a new cover letter for `job` using `exampleCoverLetters` as style refe
 #### `embedJob(job)`
 
 ```ts
-function embedJob(job: Job): Promise<TextEmbedding>;
+function embedJob(job: Job): Promise<number[]>;
 ```
 
 Embeds a job posting using the same text representation (`jobToText`) that `generateCoverLetter` uses internally, so the resulting vector is comparable to letters embedded by `embedCoverLetterSegments`. Use this to produce the `jobEmbedding` argument for `getTopXSimilarCoverLetters`.
@@ -261,11 +230,11 @@ Embeds a job posting using the same text representation (`jobToText`) that `gene
 ```ts
 function getTopXSimilarCoverLetters(
     x: number,
-    jobEmbedding: TextEmbedding,
+    jobEmbedding: number[],
     coverLetters: CoverLetter[],
-    similarityWeights?: SimilarityWeights,
-    exampleJobs?: (TextEmbedding | null)[],
-): Promise<CoverLetterSimilarityMatch[]>;
+    similarityWeights?: Record<keyof CoverLetter, number>,
+    exampleJobs?: (number[] | null)[],
+): Promise<{ coverLetter: CoverLetter; similarity: number }[]>;
 ```
 
 Returns the `x` highest-scoring letters, **each wrapped with its score** — `generateCoverLetter` needs `CoverLetterSegments`, not the embedded `.coverLetter` this returns, so extract each segment's `.text` before passing the result along (see [Quick start](#quick-start)). Default weights:
@@ -291,55 +260,18 @@ function embedCoverLetterSegments(
 
 Embeds the non-empty segments in a single OpenAI request and pairs each text with its vector. A segment whose text is empty or whitespace-only (as the heuristic segmenter can produce, e.g. for `subject`) is not sent to the API — it comes back as `{ text }` with no `embedding` key instead of throwing. If every segment is empty, the API is not called at all. Throws if the API returns fewer embeddings than non-empty segments sent.
 
-#### `segmentCoverLetter(input)`
-
-```ts
-function segmentCoverLetter(input: string): Promise<SegmentationResult>;
-```
-
-Splits a raw cover letter string into the six segments (stage 1 of the pipeline). Tries a fast regex-based heuristic first; if the confidence score indicates a problem (no salutation, markers out of order, body not splittable…), falls back to the `gpt-5.6-luna` model, which is additionally validated to only return text present in the source. Returns a `SegmentationResult` recording which path produced the segments.
-
-#### `normalizeCoverLetterText(input)`
-
-```ts
-function normalizeCoverLetterText(input: string | CoverLetterSegments): string;
-```
-
-Repairs common German UTF-8 mojibake (`Ã¤` → `ä`, `ÃŸ` → `ß`, …), applies Unicode NFC, converts CRLF to LF, collapses runs of spaces/tabs, trims each line, and reduces three or more consecutive newlines to a blank-line separator. Given `CoverLetterSegments`, joins the six segments in canonical order (`subject`, `salutation`, `introduction`, `mainBody`, `conclusion`, `greetings`) before normalizing.
-
-#### `parseCoverLetterSegmentsResponse(aiResponse)`
-
-```ts
-function parseCoverLetterSegmentsResponse(
-    aiResponse: string,
-): CoverLetterSegments;
-```
-
-`JSON.parse`s a model response, validates it with `isCoverLetterTextSegments`, and normalizes every field. Throws `Error('OpenAI did not return valid cover letter segments')` on a shape mismatch.
-
-#### `isCoverLetterTextSegments(value)`
-
-```ts
-function isCoverLetterTextSegments(
-    value: unknown,
-): value is CoverLetterSegments;
-```
-
-Type guard asserting that `value` is an object with exactly the six segment keys, each a string — extra properties are rejected.
-
 ### Values
 
-| Export                       | Type                       | Description                                                                                                                        |
-| ---------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `openAI`                     | `OpenAI`                   | Shared OpenAI SDK client, constructed as `new OpenAI()`. Reads `OPENAI_API_KEY` from the environment.                              |
-| `SEGMENTS_SCHEMA`            | strict JSON Schema object  | The `additionalProperties: false` schema requiring all six segments as strings. Pass to `text.format.schema` on the Responses API. |
-| `COVER_LETTER_SEGMENT_NAMES` | `CoverLetterSegmentName[]` | The six segment names in canonical document order.                                                                                 |
+| Export                       | Type                                                   | Description                                        |
+| ---------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
+| `COVER_LETTER_SEGMENT_NAMES` | `CoverLetterSegmentName[]` (see [Types](#types) below) | The six segment names in canonical document order. |
 
 ### Types
 
 ```ts
-type TextEmbedding = number[];
-
+// The six segment names, in canonical document order. Not itself exported —
+// spelled out once here for reference; `CoverLetterSegments` and `CoverLetter`
+// below are defined in terms of it.
 type CoverLetterSegmentName =
     | 'subject'
     | 'salutation'
@@ -351,29 +283,13 @@ type CoverLetterSegmentName =
 // Plain text, before embedding.
 type CoverLetterSegments = Record<CoverLetterSegmentName, string>;
 
-// Return type of segmentCoverLetter — records which segmentation path was used.
-type SegmentationResult = {
-    segments: CoverLetterSegments;
-    confidence: number;
-    fallbackReason?: string;
-    source: 'heuristic' | 'llm';
-};
-
 // Text paired with its embedding vector — the working unit of the library.
 // `embedding` is omitted for a segment whose text is empty or whitespace-only
 // (e.g. a subject the heuristic segmenter couldn't find).
 type CoverLetter = Record<
     CoverLetterSegmentName,
-    { text: string; embedding?: TextEmbedding }
+    { text: string; embedding?: number[] }
 >;
-
-type SimilarityWeights = Record<CoverLetterSegmentName, number>;
-
-// The shape returned by getTopXSimilarCoverLetters — a cover letter paired with its score.
-type CoverLetterSimilarityMatch = {
-    coverLetter: CoverLetter;
-    similarity: number;
-};
 
 type Job = {
     title: string;
@@ -408,7 +324,7 @@ CI (`.github/workflows/ci.yml`) runs the same five gates automatically on every 
 - **Formatting:** Prettier with single quotes and 4-space indentation (`.prettierrc`) — both differ from Prettier's defaults.
 - **TypeScript:** strict mode plus `noUncheckedIndexedAccess`, so indexed access is typed as possibly `undefined`. Keep the defensive `??` fallbacks and existence checks that already appear throughout `src/`.
 - **Module system:** `"type": "commonjs"` in `package.json` alongside `module`/`moduleResolution: "nodenext"` in `tsconfig.json`. This combination is intentional — the package ships CommonJS output.
-- **Three tsconfigs:** `tsconfig.json` is the shared base (`rootDir: "."`, includes both `src/**` and `test/**`) and drives `npm run build:dev`. `tsconfig.test.json` extends it unchanged so `npm run typecheck`'s second pass covers `test/**` too. `tsconfig.prod.json` extends the base but narrows back to `rootDir: "src"` / `src/**/*.ts` only, producing the flat `dist/*.js` layout that `main`/`types` point at.
+- **Three tsconfigs:** `tsconfig.json` is the shared base (`rootDir: "."`, includes both `src/**` and `test/**`) and drives `npm run build:dev`. `tsconfig.test.json` extends it and sets `noEmit: true`, so `npm run typecheck`'s second pass covers `test/**` without writing to disk. `tsconfig.prod.json` extends the base but narrows back to `rootDir: "src"` / `src/**/*.ts` only, producing the flat `dist/*.js` layout that `main`/`types` point at — `build:prod` cleans `dist/` first so output from the other two configs can't leak into it.
 
 ### Layout
 
