@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-12
+
+### Added
+
+- `getTopXSimilarCoverLetters` accepts a new optional fifth parameter,
+  `exampleJobs: (number[] | null)[]`, defaulting to `[]`. Matched by
+  index to `coverLetters`, `exampleJobs[i]` is the embedding of the job that
+  `coverLetters[i]` was originally written for; when present, that letter's
+  weighted segment similarity is additionally multiplied by the cosine
+  similarity between the target `jobEmbedding` and `exampleJobs[i]`. A
+  `null`, missing, or out-of-bounds entry falls back to a multiplier of `1`,
+  so omitting the argument is a no-op and existing callers are unaffected
+  (closes #33).
+
 ## [0.6.0] - 2026-08-12
 
 ### Changed
@@ -51,6 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `build:prod` now removes `dist/` before compiling, so leftover output from
   `build:dev` or a prior `typecheck` run can no longer end up inside the
   package's published `files: ["dist"]` surface.
+
+> > > > > > > origin/main
 
 ## [0.5.0] - 2026-08-12
 

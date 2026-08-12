@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 1. Segments existing cover letters into 6 parts (`subject`, `salutation`, `introduction`, `mainBody`, `conclusion`, `greetings`) — first via heuristic regex parsing (`src/coverLetterSegmentation/segmentCoverLetterHeuristically.ts`), falling back to an LLM (`gpt-5.6-luna`) when confidence is low.
 2. Embeds each non-empty segment via OpenAI embeddings (`text-embedding-3-small`); segments that are empty or whitespace-only (e.g. a subject the heuristic couldn't find) keep their text with no embedding.
-3. Ranks stored example cover letters against a target job by weighted per-segment cosine similarity (`src/getTopX.ts`).
+3. Ranks stored example cover letters against a target job by weighted per-segment cosine similarity, optionally scaled by job-to-job cosine similarity when the letter's original job embedding is supplied (`src/getTopX.ts`).
 4. Generates a new cover letter with OpenAI's Responses API (`gpt-5.6-sol`) using the most similar examples as style references, against a strict JSON schema (`src/constants/segmentsSchema.ts`).
 
 ## Commands
