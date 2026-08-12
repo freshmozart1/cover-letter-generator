@@ -161,3 +161,65 @@ test('falls back to the leading-lines bound when there is no salutation', () => 
     assert.strictEqual(segments.salutation, '');
     assert.strictEqual(fallbackReason, 'salutation not found');
 });
+
+test('recognizes "Hallo zusammen," as a salutation instead of scanning it as a subject line', () => {
+    // Before SALUTATION_PATTERN covered "hallo", this opener fell through to the
+    // no-salutation branch, whose loose keyword scan then misidentified the
+    // introduction (it contains "Stelle") as the subject line.
+    const input = [
+        'Max Mustermann',
+        '',
+        'Musterstadt, 1. Januar 2026',
+        '',
+        'Hallo zusammen,',
+        '',
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+        '',
+        'Ich arbeite seit fünf Jahren in der Softwareentwicklung.',
+        '',
+        'Über eine Einladung zum Gespräch freue ich mich sehr.',
+        '',
+        'Mit freundlichen Grüßen',
+        'Max Mustermann',
+    ].join('\n');
+
+    const { segments, confidence, fallbackReason } =
+        segmentCoverLetterHeuristically(input);
+
+    assert.strictEqual(fallbackReason, undefined);
+    assert.strictEqual(confidence, 0.95);
+    assert.strictEqual(segments.subject, '');
+    assert.strictEqual(segments.salutation, 'Hallo zusammen,');
+    assert.strictEqual(
+        segments.introduction,
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+    );
+});
+
+test('does not scan into the body for a subject when no salutation is matched at all', () => {
+    // "Moin," is deliberately not covered by SALUTATION_PATTERN, so this letter
+    // falls into the no-salutation branch. Its introduction contains "Stelle",
+    // which would have wrongly matched SUBJECT_KEYWORD_PATTERN before this fix
+    // gated that match on a salutation being found.
+    const input = [
+        'Max Mustermann',
+        '',
+        'Musterstadt, 1. Januar 2026',
+        '',
+        'Moin,',
+        '',
+        'hiermit bewerbe ich mich auf die ausgeschriebene Stelle als Entwicklerin.',
+        '',
+        'Ich arbeite seit fünf Jahren in der Softwareentwicklung.',
+        '',
+        'Über eine Einladung zum Gespräch freue ich mich sehr.',
+        '',
+        'Mit freundlichen Grüßen',
+        'Max Mustermann',
+    ].join('\n');
+
+    const { segments } = segmentCoverLetterHeuristically(input);
+
+    assert.strictEqual(segments.subject, '');
+    assert.strictEqual(segments.salutation, '');
+});
