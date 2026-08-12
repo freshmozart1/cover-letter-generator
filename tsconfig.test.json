@@ -1,12 +1,7 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "noEmit": true,
-        // The base config sets rootDir to "src" so the build emits dist/*.js flat.
-        // This program also includes test/**, which sits outside that root, so widen
-        // it to "." — tsc enforces rootDir structurally even with noEmit (TS6059),
-        // so this is required for typecheck to succeed, not just for emit layout.
-        "rootDir": "."
-    },
-    "include": ["test/**/*.ts", "src/**/*.ts"]
+        "sourceMap": true,
+        "declaration": false
+    }
 }

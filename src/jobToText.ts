@@ -9,5 +9,5 @@ export function jobToText(job: Job): string {
     return `Job Title: ${job.title}
 Company: ${job.company}
 Location: ${job.location ?? 'Not specified'}
-Description: ${job.description ?? 'Not specified'}`;
+Description: ${job.description}`;
 }

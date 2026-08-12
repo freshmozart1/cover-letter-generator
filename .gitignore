@@ -4,6 +4,7 @@ dist/
 coverage/
 .fallow
 .claude/settings.local.json
+.claude/worktrees/
 .DS_Store
 .vscode
 .env
