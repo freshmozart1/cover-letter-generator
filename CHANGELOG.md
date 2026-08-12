@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8] - 2026-08-12
+
+### Fixed
+
+- When no salutation was found, `findSubjectLine`'s fallback search accepted the
+  loose keyword match (`SUBJECT_KEYWORD_PATTERN`, matching everyday words like
+  `stelle`, `bewerbung`, `position`) over the first `MAX_SUBJECT_SEARCH_LINES`
+  lines. On short letters this could misidentify the introduction paragraph as
+  the subject line. That branch now only accepts an explicit subject marker
+  (`Betreff:`/`Subject:`/`Re:`/`Betr.`); the loose keyword match is only used
+  once a salutation bound is known. `SALUTATION_PATTERN` also now recognizes
+  `Hallo…`, `Guten Tag…`, and `Hello…` as salutation openers, so letters using
+  those greetings take the salutation-bound path instead of the no-salutation
+  fallback (closes #23). This path is only reachable through the
+  non-exported `segmentCoverLetterHeuristically`; any heuristic result on this
+  path already set `fallbackReason`, so `segmentCoverLetter` always discarded
+  it in favor of the LLM fallback — no public API behavior changed.
+
 ## [0.4.7] - 2026-08-09
 
 ### Changed

@@ -8,7 +8,7 @@ const SUBJECT_PREFIX_PATTERN = /^(?:betreff|betr\.?|subject|re)\s*[:-]/iu;
 const SUBJECT_KEYWORD_PATTERN =
     /\b(?:bewerbung|application|applying|position|stelle|ausbildung|praktikum)\b/iu;
 const SALUTATION_PATTERN =
-    /^(?:sehr geehrte(?:r|\s+damen\s+und\s+herren|\s+frau|\s+herr)|liebe(?:r|\s)|dear\s+|to whom it may concern|dear hiring manager|dear sir or madam)/iu;
+    /^(?:sehr geehrte(?:r|\s+damen\s+und\s+herren|\s+frau|\s+herr)|liebe(?:r|\s)|hallo\b|guten tag\b|hello\b|dear\s+|to whom it may concern|dear hiring manager|dear sir or madam)/iu;
 const GREETINGS_PATTERN =
     /^(?:mit freundlichen gr(?:ü|ue)ßen|freundliche gr(?:ü|ue)ße|viele gr(?:ü|ue)ße|herzliche gr(?:ü|ue)ße|beste gr(?:ü|ue)ße|kind regards|best regards|sincerely|yours faithfully|yours sincerely|regards)\b/iu;
 const SENTENCE_BOUNDARY_PATTERN = /(?<=[.!?])\s+/u;
@@ -22,9 +22,13 @@ type IndexedLine = {
 /**
  * A function that finds the subject line of a cover letter. It only searches the
  * lines above the salutation. When a salutation was found, its position is used
- * as the exact upper bound of the search — no arbitrary line-count cap is
- * applied. Only when no salutation was found does the search fall back to the
- * first {@link MAX_SUBJECT_SEARCH_LINES} non-empty lines.
+ * as the exact upper bound of the search, and either an explicit subject marker
+ * ({@link SUBJECT_PREFIX_PATTERN}) or a loose keyword match
+ * ({@link SUBJECT_KEYWORD_PATTERN}) is accepted. Only when no salutation was
+ * found does the search fall back to the first {@link MAX_SUBJECT_SEARCH_LINES}
+ * non-empty lines — and in that case only an explicit subject marker is
+ * accepted, since without a salutation bound the loose keyword match would risk
+ * scanning into the body.
  * @param lines the non-empty lines of the cover letter, in document order
  * @param salutationPosition index of the salutation **within `lines`** — a
  * position, not an `allLines` index. Omit it when no salutation was found.
@@ -34,12 +38,14 @@ function findSubjectLine(
     lines: IndexedLine[],
     salutationPosition?: number,
 ): IndexedLine | undefined {
+    const hasSalutation = salutationPosition !== undefined;
     const upperSearchBound = salutationPosition ?? MAX_SUBJECT_SEARCH_LINES;
     return lines.find(
         (line, position) =>
             position < upperSearchBound &&
             (SUBJECT_PREFIX_PATTERN.test(line.text) ||
-                (line.text.length <= 180 &&
+                (hasSalutation &&
+                    line.text.length <= 180 &&
                     SUBJECT_KEYWORD_PATTERN.test(line.text))),
     );
 }
