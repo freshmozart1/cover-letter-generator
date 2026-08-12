@@ -3,9 +3,10 @@
     "compilerOptions": {
         "sourceMap": false,
         "declaration": false,
-        // The base config sets rootDir to "src" so the build emits dist/*.js flat.
-        // This program also includes test/**, which sits outside that root, so widen
-        // it — harmless here because noEmit means rootDir affects nothing else.
+        // The base config sets rootDir to "." (it also typechecks test/**), which
+        // would emit dist/src/*.js here. This program emits (no noEmit), and
+        // package.json's main/types point at the flat dist/*.js layout, so narrow
+        // rootDir back to "src" and include (below) to src/**/*.ts only.
         "rootDir": "src"
     },
     "include": ["src/**/*.ts"]

@@ -26,5 +26,8 @@ describe('/src/embed.ts', () => {
         assert.strictEqual(createSpy.mock.callCount(), 3);
         assert.strictEqual(stringOutput.length, 1);
     });
-    it('exports embed()');
+    it('exports embed()', async () => {
+        const { embed } = await import('../src/embed.js');
+        assert.strictEqual(typeof embed, 'function');
+    });
 });

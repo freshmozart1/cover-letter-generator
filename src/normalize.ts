@@ -1,4 +1,5 @@
 import { MOJIBAKE_REPLACEMENTS } from './constants/mojibakeReplacements';
+import { COVER_LETTER_SEGMENT_NAMES } from './constants/segmentNames';
 import { CoverLetterSegments } from './types';
 
 /**
@@ -25,7 +26,11 @@ export function normalizeCoverLetterText(
     input: string | CoverLetterSegments,
 ): string {
     return repairCommonGermanMojibake(
-        typeof input === 'string' ? input : Object.values(input).join('\n'),
+        typeof input === 'string'
+            ? input
+            : COVER_LETTER_SEGMENT_NAMES.map(
+                  (segmentName) => input[segmentName],
+              ).join('\n'),
     )
         .normalize('NFC')
         .replace(/\r\n?/g, '\n')

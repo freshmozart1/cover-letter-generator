@@ -31,4 +31,25 @@ describe('/src/normalize.ts ', () => {
             'Betreff: Bewerbung als Full-Stack-Developer\nSehr geehrte Damen und Herren\nIch bin ein sehr guter Software Tester.\nIch kann jede Software bauen.\nBitte geben Sie mir eine Chance.\nFreundliche Grüße',
         );
     });
+
+    test('normalizeCoverLetterText() orders segments canonically regardless of the input object key order', () => {
+        // CoverLetterSegments is a Record, so its key order isn't part of the
+        // type — a value built with keys in a different order (e.g. from
+        // Object.fromEntries or a DB record) must still normalize in the
+        // canonical subject/salutation/introduction/mainBody/conclusion/
+        // greetings order, not object-insertion order.
+        const reorderedSegments = {
+            greetings: COVER_LETTER.greetings,
+            conclusion: COVER_LETTER.conclusion,
+            mainBody: COVER_LETTER.mainBody,
+            introduction: COVER_LETTER.introduction,
+            salutation: COVER_LETTER.salutation,
+            subject: COVER_LETTER.subject,
+        };
+
+        assert.equal(
+            normalizeCoverLetterText(reorderedSegments),
+            normalizeCoverLetterText(COVER_LETTER),
+        );
+    });
 });
