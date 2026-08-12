@@ -1,25 +1,33 @@
-import type { CoverLetter, Job } from './types';
-import { SEGMENTS_SCHEMA } from './segmentsSchema';
+import type { CoverLetter, CoverLetterSegments, Job } from './types';
+import { SEGMENTS_SCHEMA } from './constants/segmentsSchema';
 import { openAI, parseCoverLetterSegmentsResponse } from './llm';
-import { COVER_LETTER_SEGMENT_NAMES } from './constants/segmentNames';
 import { embedCoverLetterSegments } from './embedCoverLetterSegments';
 import { jobToText } from './jobToText';
-
-const GENERATOR_MODEL = 'gpt-5.6-sol';
-const GENERATOR_INSTRUCTIONS = `You are an experienced career counselor who crafts professional, authentic cover letters.
-You carefully analyze sample cover letters to identify and incorporate the writer’s writing style, tone, and personal characteristics.`;
+import { normalizeCoverLetterText } from './normalize';
+import { WRITING_RULES } from './constants/writingRules';
+import { GENERATOR_INSTRUCTIONS } from './constants/generatorInstructions';
+import { GENERATOR_MODEL } from './constants/generatorModel';
 
 /**
- * A function to convert cover letters into strings.
- * @param coverLetter The cover letter that needs to be converted to a string.
- * @returns The converted cover letter
+ * This function creates ai prompts for writing cover letters
+ * @param job the job that somebody wants to apply to
+ * @param exampleCoverLetterSegments Examples of cover letters for the AI
+ * @returns a prompt that instructs an ai to write cover letters
  */
-function coverLetterToText(coverLetter: CoverLetter): string {
-    return COVER_LETTER_SEGMENT_NAMES.map(
-        (segmentName) => coverLetter[segmentName].text,
-    )
-        .filter((segmentText) => segmentText.trim().length > 0)
-        .join(`\n\n`);
+export function createCoverLetterPrompt(
+    job: Job,
+    exampleCoverLetterSegments: CoverLetterSegments[],
+): string {
+    return [
+        `Write a cover letter for the following job vacancy:`,
+        jobToText(job),
+        `---`,
+        `Sample cover letters for style and content review:`,
+        `${exampleCoverLetterSegments.map((cl, i) => `Cover Letter ${i + 1}:\n${normalizeCoverLetterText(cl)}`).join(`\n\n`)}`,
+        `---`,
+        `Rules:`,
+        WRITING_RULES,
+    ].join('\n\n');
 }
 
 /**
@@ -32,24 +40,12 @@ function coverLetterToText(coverLetter: CoverLetter): string {
  */
 export async function generateCoverLetter(
     job: Job,
-    exampleCoverLetters: CoverLetter[],
+    exampleCoverLetters: CoverLetterSegments[],
 ): Promise<CoverLetter> {
-    const generatorInput: string = [
-        `Write a cover letter for the following job vacancy:\n`,
-        jobToText(job) + '\n',
-        `---\n`,
-        `Sample cover letters for style and content review:\n`,
-        `${exampleCoverLetters.map((cl, i) => `Cover Letter ${i + 1}:\n${coverLetterToText(cl)}`).join(`\n\n`)}\n`,
-        `---\n`,
-        `Rules:\n`,
-        `- Write a new cover letter tailored specifically to this position.`,
-        `- Adopt the personal writing style and tone used in the references.`,
-        `- Carefully tailor the wording, specific points, and key focus areas to this position.`,
-        `- Return only the final cover letter, without any comments.`,
-        `- Use the same language in the cover letter as in the job posting.`,
-        `- Limit the cover letter to a maximum of 250 words.`,
-        `- Segment the cover letter into the requested fields.`,
-    ].join('\n');
+    const generatorInput: string = createCoverLetterPrompt(
+        job,
+        exampleCoverLetters,
+    );
     const aiResponse = await openAI.responses.create({
         model: GENERATOR_MODEL,
         instructions: GENERATOR_INSTRUCTIONS,

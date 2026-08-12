@@ -24,6 +24,5 @@ jobs:
             - run: npm run lint
             - run: npm run typecheck
             - run: npm test
-              env:
-                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-            - run: npm run build
+            - run: npm run build:dev
+            - run: npm run build:prod

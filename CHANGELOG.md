@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-12
+
+### Added
+
+- Full `test/` suite covering all five pipeline stages: `segmentCoverLetterHeuristically`
+  (every confidence-scoring branch), `segmentCoverLetterWithLlm`, `segmentCoverLetter`,
+  `getTopXSimilarCoverLetters`/`calculateWeightedCoverLetterSimilarity`, and
+  `normalizeCoverLetterText` (closes #1). `npm test` previously had no `test/`
+  directory to run.
+
+### Changed
+
+- **Breaking:** `generateCoverLetter`'s second parameter is now
+  `CoverLetterSegments[]` instead of `CoverLetter[]` — it only ever read each
+  example's text, never its embeddings, so callers previously had to thread
+  embeddings through for no reason. Pass the `CoverLetterSegments` (e.g. the
+  `.segments` from a `SegmentationResult`, or `Object.fromEntries` over a
+  `CoverLetter`'s `.text` fields) instead of the full embedded `CoverLetter`.
+- `normalizeCoverLetterText` now also accepts `CoverLetterSegments` (in
+  addition to `string`), joining the six segments in canonical order before
+  repairing mojibake and normalizing whitespace.
+
+### Fixed
+
+- `isCoverLetterTextSegments` now rejects objects with properties outside the
+  six known segment names, instead of accepting extra unknown properties as a
+  valid `CoverLetterSegments`.
+- The internal `segmentCoverLetterWithLlm` LLM-fallback path lost its
+  source-text-containment guard partway through this release's development
+  (never shipped); restored it and added tests, since it's the safeguard
+  against the model inventing content not present in the source letter.
+- `tsconfig.prod.json` (introduced in 0.4.7, never released as a build
+  consumers actually used) set `"declaration": false`, so `npm run build:prod`
+  emitted no `.d.ts` files at all, even though `package.json`'s `types` field
+  points at `dist/index.d.ts`. Every TypeScript consumer of a published build
+  would have resolved `types` to a nonexistent file. Fixed before this was
+  ever released.
+
+### Internal
+
+- Extracted remaining inline constants (generator prompt/model, mojibake
+  table, similarity weights) into `src/constants/`, matching the existing
+  `segmentNames`/`segmentsSchema` layout.
+- Extracted `generateCoverLetter`'s prompt-building into `createCoverLetterPrompt`
+  (not part of the package's public exports — internal, testable in isolation).
+- `npm run build` split into `build:dev` (typechecks `src/` + `test/`,
+  mirrors the source tree) and `build:prod` (the flat `dist/*.js` layout
+  `main`/`types` point at) — CI now runs both.
+
 ## [0.4.8] - 2026-08-12
 
 ### Fixed

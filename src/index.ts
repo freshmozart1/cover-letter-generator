@@ -3,7 +3,7 @@ export { getTopXSimilarCoverLetters } from './getTopX';
 export { embedCoverLetterSegments } from './embedCoverLetterSegments';
 export { normalizeCoverLetterText } from './normalize';
 export { openAI, parseCoverLetterSegmentsResponse } from './llm';
-export { SEGMENTS_SCHEMA } from './segmentsSchema';
+export { SEGMENTS_SCHEMA } from './constants/segmentsSchema';
 export { COVER_LETTER_SEGMENT_NAMES } from './constants';
 export {
     isCoverLetterTextSegments,
