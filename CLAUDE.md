@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- Build: `npm run build` (`tsc -p tsconfig.json`)
+- Build: `npm run build` (`rm -rf dist && tsc -p tsconfig.json`)
 - Test: `npm test` (Node's built-in test runner via `node --experimental-test-module-mocks --import tsx --test "test/*.test.ts"` — no Jest/Vitest/Mocha)
 - Typecheck: `npm run typecheck` (checks both `tsconfig.json` and `tsconfig.test.json`)
 - Lint: `npm run lint` (`eslint .`)

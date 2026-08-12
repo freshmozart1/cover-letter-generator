@@ -359,8 +359,8 @@ type Job = {
 
 ```bash
 npm install          # requires the allow-git=root line in .npmrc
-npm run build        # tsc -p tsconfig.json → dist/
-npm run typecheck    # tsc --noEmit on both tsconfig.json and tsconfig.test.json
+npm run build        # rm -rf dist && tsc -p tsconfig.json
+npm run typecheck    # tsc against tsconfig.json and tsconfig.test.json, no emit either way
 npm test             # node --experimental-test-module-mocks --import tsx --test "test/*.test.ts"
 npm run lint         # eslint .
 npm run format       # prettier --write .
@@ -375,7 +375,7 @@ CI (`.github/workflows/ci.yml`) runs the same four gates automatically on every 
 - **Formatting:** Prettier with single quotes and 4-space indentation (`.prettierrc`) — both differ from Prettier's defaults.
 - **TypeScript:** strict mode plus `noUncheckedIndexedAccess`, so indexed access is typed as possibly `undefined`. Keep the defensive `??` fallbacks and existence checks that already appear throughout `src/`.
 - **Module system:** `"type": "commonjs"` in `package.json` alongside `module`/`moduleResolution: "nodenext"` in `tsconfig.json`. This combination is intentional — the package ships CommonJS output.
-- **Two tsconfigs:** `tsconfig.json` builds `src/` only (`rootDir: "src"`) and drives the `dist/` layout. `tsconfig.test.json` extends it and widens `rootDir` to `.` purely so `test/**` can be typechecked without changing the build output.
+- **Two tsconfigs:** `tsconfig.json` builds `src/` only (`rootDir: "src"`) and drives the `dist/` layout. `tsconfig.test.json` extends it, sets `noEmit: true`, and widens `rootDir` to `.` so `test/**` can be typechecked without affecting the build output.
 
 ### Layout
 
