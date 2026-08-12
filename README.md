@@ -29,7 +29,7 @@ The library is built around a four-stage pipeline.
 | 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity, and the top _x_ are returned sorted by score.                                                                                                                                                                                                                                   | `src/getTopX.ts`                                     |
 | 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-5.6-sol` through OpenAI's Responses API, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`.                                                                                                                                                                           | `src/generate.ts`, `src/constants/segmentsSchema.ts` |
 
-All four stages are exported from the package entry point, along with `embedJob`, which produces the embedding vector that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. See [API reference](#api-reference).
+Three of these four stages — Embed, Rank, and Generate — are exported from the package entry point, along with `embedJob`, which produces the embedding vector that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. (Stage 1, segmentation, is an internal implementation detail and is not part of the public API.) See [API reference](#api-reference).
 
 ## Requirements
 
@@ -240,34 +240,32 @@ Embeds the non-empty segments in a single OpenAI request and pairs each text wit
 
 ### Values
 
-| Export                       | Type                                                                                           | Description                                        |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `COVER_LETTER_SEGMENT_NAMES` | `('subject' \| 'salutation' \| 'introduction' \| 'mainBody' \| 'conclusion' \| 'greetings')[]` | The six segment names in canonical document order. |
+| Export                       | Type                                                   | Description                                        |
+| ---------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
+| `COVER_LETTER_SEGMENT_NAMES` | `CoverLetterSegmentName[]` (see [Types](#types) below) | The six segment names in canonical document order. |
 
 ### Types
 
 ```ts
-// Plain text, before embedding.
-type CoverLetterSegments = Record<
+// The six segment names, in canonical document order. Not itself exported —
+// spelled out once here for reference; `CoverLetterSegments` and `CoverLetter`
+// below are defined in terms of it.
+type CoverLetterSegmentName =
     | 'subject'
     | 'salutation'
     | 'introduction'
     | 'mainBody'
     | 'conclusion'
-    | 'greetings',
-    string
->;
+    | 'greetings';
+
+// Plain text, before embedding.
+type CoverLetterSegments = Record<CoverLetterSegmentName, string>;
 
 // Text paired with its embedding vector — the working unit of the library.
 // `embedding` is omitted for a segment whose text is empty or whitespace-only
 // (e.g. a subject the heuristic segmenter couldn't find).
 type CoverLetter = Record<
-    | 'subject'
-    | 'salutation'
-    | 'introduction'
-    | 'mainBody'
-    | 'conclusion'
-    | 'greetings',
+    CoverLetterSegmentName,
     { text: string; embedding?: number[] }
 >;
 
