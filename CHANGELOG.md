@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8] - 2026-08-12
+
+### Fixed
+
+- `npm run typecheck` silently emitted a stray `dist/test/` tree plus a
+  duplicate `dist/src/` tree on every run, because `tsconfig.test.json`
+  never actually set `noEmit` despite a comment claiming it did — and a
+  subsequent `npm run build` never cleaned those up. `tsconfig.test.json`
+  now sets `noEmit: true` directly so it holds regardless of invocation, and
+  `build` now runs `rm -rf dist` before `tsc` so any stale `outDir` content
+  can't silently persist (closes #24).
+
 ## [0.4.7] - 2026-08-09
 
 ### Changed
