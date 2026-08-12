@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-08-12
+
+### Fixed
+
+- `segmentCoverLetterWithLlm`'s source-containment validation no longer
+  redundantly re-collapses whitespace already normalized by
+  `normalizeCoverLetterText`, while still correctly collapsing newlines so
+  multi-paragraph segments are still validated correctly (closes #29).
+
 ## [0.5.2] - 2026-08-12
 
 ### Added
