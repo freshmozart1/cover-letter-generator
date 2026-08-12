@@ -46,7 +46,7 @@ export function calculateWeightedCoverLetterSimilarity(
  * @param coverLetters The coverletters that should be compared
  * @param similarityWeights optional weight multipliers for the separate segments of the cover letters.
  * @param exampleJobs Optional pre-embedded job vectors, matched by index to `coverLetters` — `exampleJobs[i]` is the embedding of the job that `coverLetters[i]` was originally written for. `null` (or a missing/short array) means no known job for that entry, which falls back to segment similarity only.
- * @returns an array of up to x `{ coverLetter, similarity }` pairs, sorted by descending cosine similarity.
+ * @returns an array of up to x `{ coverLetter, similarity }` pairs, sorted by descending similarity — a weighted segment cosine similarity, additionally scaled by job-to-job cosine similarity when a corresponding `exampleJobs` entry is given.
  */
 export async function getTopXSimilarCoverLetters(
     x: number,
