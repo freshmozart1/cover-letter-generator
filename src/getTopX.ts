@@ -45,6 +45,7 @@ export function calculateWeightedCoverLetterSimilarity(
  * @param jobEmbedding The embedded job against whom the coverletters should be compared
  * @param coverLetters The coverletters that should be compared
  * @param similarityWeights optional weight multipliers for the separate segments of the cover letters.
+ * @param exampleJobs Optional pre-embedded job vectors, matched by index to `coverLetters` — `exampleJobs[i]` is the embedding of the job that `coverLetters[i]` was originally written for. `null` (or a missing/short array) means no known job for that entry, which falls back to segment similarity only.
  * @returns an array of up to x `{ coverLetter, similarity }` pairs, sorted by descending cosine similarity.
  */
 export async function getTopXSimilarCoverLetters(
@@ -52,16 +53,24 @@ export async function getTopXSimilarCoverLetters(
     jobEmbedding: TextEmbedding,
     coverLetters: CoverLetter[],
     similarityWeights: SimilarityWeights = SIMILARITY_WEIGHTS,
+    exampleJobs: (TextEmbedding | null)[] = [],
 ): Promise<CoverLetterSimilarityMatch[]> {
     return coverLetters
-        .map((coverLetter) => ({
-            coverLetter,
-            similarity: calculateWeightedCoverLetterSimilarity(
-                jobEmbedding,
+        .map((coverLetter, i) => {
+            const exampleJobEmbedding = exampleJobs[i];
+            const jobSimilarity = exampleJobEmbedding
+                ? cosineSimilarity(jobEmbedding, exampleJobEmbedding)
+                : 1;
+            return {
                 coverLetter,
-                similarityWeights,
-            ),
-        }))
+                similarity:
+                    calculateWeightedCoverLetterSimilarity(
+                        jobEmbedding,
+                        coverLetter,
+                        similarityWeights,
+                    ) * jobSimilarity,
+            };
+        })
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, x);
 }
