@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-12
+
+### Changed
+
+- **Breaking:** `src/index.ts` now exports only the intended public surface —
+  `embedCoverLetterSegments`, `embedJob`, `generateCoverLetter`,
+  `getTopXSimilarCoverLetters`, `COVER_LETTER_SEGMENT_NAMES`, and the types
+  `CoverLetter`, `CoverLetterSegments`, and `Job`. `normalizeCoverLetterText`,
+  `openAI`, `parseCoverLetterSegmentsResponse`, `SEGMENTS_SCHEMA`,
+  `isCoverLetterTextSegments`, `segmentCoverLetter`, and the types
+  `TextEmbedding`, `CoverLetterSegmentName`, `SimilarityWeights`,
+  `CoverLetterSimilarityMatch`, and `SegmentationResult` were never meant to
+  be public API and are no longer exported from the package root.
+  `CoverLetterSegmentName` is still used internally, it just isn't exported
+  from `src/index.ts` anymore (closes #34).
+
 ## [0.5.3] - 2026-08-12
 
 ### Fixed
