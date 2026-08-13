@@ -114,7 +114,9 @@ const job: Job = {
 
 // Your past cover letters, as plain text — exactly what you'd have on hand.
 const pastLetterTexts: string[] = [
-    `Dear Hiring Manager,
+    `Subject: Application for Backend Engineer
+
+Dear Hiring Manager,
 
 I was excited to see your posting for a backend role. Over the past six years I have built and operated event-driven services handling millions of daily transactions, with a focus on reliability and clean API design.
 
@@ -207,7 +209,9 @@ const job: Job = {
 // Your past cover letters, already split into the six segments.
 const pastLetters: CoverLetterSegments[] = [
     {
-        subject: 'Application for Backend Engineer',
+        // segmentCoverLetter() keeps the matched line verbatim, prefix included —
+        // see the raw-text example above, which this one mirrors.
+        subject: 'Subject: Application for Backend Engineer',
         salutation: 'Dear Hiring Manager,',
         introduction: 'I was excited to see your posting for a backend role...',
         mainBody: 'Over the past six years I have built and operated...',
