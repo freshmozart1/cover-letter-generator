@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-08-13
+
+### Fixed
+
+- Added a `prepare` script (`npm run build:prod`) to `package.json`. `dist/`
+  is gitignored and, until now, nothing built it when this package was
+  installed as a git dependency (e.g.
+  `github:freshmozart1/cover-letter-generator#<tag>`) — npm only clones the
+  source, so `main`/`types` pointed at a `dist/` that never existed, and
+  `require('cover-letter-generator')` threw in consuming projects. `prepare`
+  now runs automatically during npm's git-dependency install step, so `dist/`
+  is built without any manual action from the consumer (closes #41). As a
+  side effect, CI's `npm ci` now also triggers this same build implicitly,
+  in addition to the workflow's existing explicit `build:dev`/`build:prod`
+  steps — redundant but harmless and idempotent.
+
+### Internal
+
+- `segmentCoverLetterHeuristically` was split into three smaller helper
+  functions (`locateMarkerLines`, `computeBodyRange`, `extractGreetingsText`)
+  to resolve a complexity flag from static analysis. Pure refactor — no
+  behavior or public API change.
+
 ## [0.8.0] - 2026-08-13
 
 ### Added

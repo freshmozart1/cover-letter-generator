@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.8.0`, `private: true` — not published to npm. Install it from source (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.9.0`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -42,13 +42,15 @@ export OPENAI_API_KEY="sk-..."
 
 ## Installation
 
-The package is marked `private` and is not on the npm registry, so install it from source:
+The package is marked `private` and is not on the npm registry, so install it from source — either a local clone or a git dependency of another project.
+
+### From a local clone
 
 ```bash
 git clone https://github.com/freshmozart1/cover-letter-generator.git
 cd cover-letter-generator
 npm install
-npm run build:prod   # emits dist/ — main and types point here
+npm run build:prod   # emits dist/ — main and types point here (now automatic via the `prepare` script on `npm install` too; kept here for clarity)
 ```
 
 To consume it from another local project, link the built package:
@@ -61,7 +63,17 @@ npm link
 npm link cover-letter-generator
 ```
 
-### The `allow-git=root` caveat
+### As a git dependency
+
+The package can also be installed directly as a git dependency of another project, pinned to a tag:
+
+```bash
+npm install github:freshmozart1/cover-letter-generator#v0.9.0
+```
+
+`dist/` is built automatically during this install via the package's `prepare` script (`npm run build:prod`), so `main`/`types` resolve correctly right away — no manual build step needed.
+
+### The `allow-git` caveat
 
 The `cosine-similarity` dependency resolves to a **GitHub tag rather than the npm registry**:
 
@@ -75,7 +87,9 @@ npm refuses git-sourced dependencies unless they are explicitly permitted. This 
 allow-git=root
 ```
 
-Do not remove that line — `npm install` will fail without it. If you pull this package into a **different** project as a dependency, that project needs the same setting in its own `.npmrc`, since the git dependency travels with the package.
+Do not remove that line — `npm install` will fail without it. `root` is enough here because `cosine-similarity` is declared directly in _this_ package's own `package.json`.
+
+If you pull this package into a **different** project as a dependency, that project needs `allow-git=all` (not `root`) in its own `.npmrc`. From that project's point of view, `cosine-similarity` is not a root dependency — it isn't listed in the consuming project's `package.json` at all, only in `cover-letter-generator`'s — so `root` won't permit it and the install will fail without `all`.
 
 ## Quick start
 
