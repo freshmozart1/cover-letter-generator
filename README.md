@@ -29,7 +29,7 @@ The library is built around a four-stage pipeline.
 | 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity — optionally scaled by job-to-job similarity when the letter's original job is known — and the top _x_ are returned sorted by score.                                                                                                                                             | `src/getTopX.ts`                                     |
 | 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-5.6-sol` through OpenAI's Responses API, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`.                                                                                                                                                                           | `src/generate.ts`, `src/constants/segmentsSchema.ts` |
 
-Three of these four stages — Embed, Rank, and Generate — are exported from the package entry point, along with `embedJob`, which produces the embedding vector that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. (Stage 1, segmentation, is an internal implementation detail and is not part of the public API.) See [API reference](#api-reference).
+All four stages — Segment, Embed, Rank, and Generate — are exported from the package entry point, along with `embedJob`, which produces the embedding vector that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. See [API reference](#api-reference).
 
 ## Requirements
 
@@ -79,7 +79,100 @@ Do not remove that line — `npm install` will fail without it. If you pull this
 
 ## Quick start
 
-The full pipeline: turn your existing letters into an embedded library, embed a job posting, rank, and generate.
+The full pipeline: segment your existing letters, turn them into an embedded library, embed a job posting, rank, and generate.
+
+```ts
+import {
+    segmentCoverLetter,
+    embedCoverLetterSegments,
+    embedJob,
+    generateCoverLetter,
+    getTopXSimilarCoverLetters,
+    COVER_LETTER_SEGMENT_NAMES,
+    type CoverLetter,
+    type CoverLetterSegments,
+    type Job,
+} from 'cover-letter-generator';
+
+// generateCoverLetter() only needs each example's text, not its embedding.
+function toSegments(coverLetter: CoverLetter): CoverLetterSegments {
+    return Object.fromEntries(
+        COVER_LETTER_SEGMENT_NAMES.map((name) => [
+            name,
+            coverLetter[name].text,
+        ]),
+    ) as CoverLetterSegments;
+}
+
+const job: Job = {
+    title: 'Senior Backend Engineer',
+    company: 'Example GmbH',
+    location: 'Berlin, Germany',
+    description:
+        'You will design and operate our event-driven order platform...',
+};
+
+// Your past cover letters, as plain text — exactly what you'd have on hand.
+const pastLetterTexts: string[] = [
+    `Dear Hiring Manager,
+
+I was excited to see your posting for a backend role. Over the past six years I have built and operated event-driven services handling millions of daily transactions, with a focus on reliability and clean API design.
+
+I would welcome the chance to discuss how I can help your team ship the next stage of your platform.
+
+Kind regards,
+Ole Koester`,
+    // ...more letters
+];
+
+async function main(): Promise<void> {
+    // 1. Segment each raw cover letter into its six parts.
+    const pastLetters: CoverLetterSegments[] = await Promise.all(
+        pastLetterTexts.map(async (text) => {
+            const { segments } = await segmentCoverLetter(text);
+            return segments;
+        }),
+    );
+
+    // 2. Embed the library once and store the result.
+    const library: CoverLetter[] = await Promise.all(
+        pastLetters.map((segments) => embedCoverLetterSegments(segments)),
+    );
+
+    // 3. Embed the target job with the same text representation used for generation.
+    const jobEmbedding = await embedJob(job);
+
+    // 4. Rank the library against the job.
+    const topMatches = await getTopXSimilarCoverLetters(
+        3,
+        jobEmbedding,
+        library,
+    );
+
+    // 5. Generate a new letter in the style of the best matches.
+    const generated = await generateCoverLetter(
+        job,
+        topMatches.map(({ coverLetter }) => toSegments(coverLetter)),
+    );
+
+    console.log(generated.subject.text);
+    console.log(generated.mainBody.text);
+}
+
+void main();
+```
+
+The package builds to CommonJS (`"type": "commonjs"`, `main: "dist/index.js"`), so plain JavaScript consumers use `require`:
+
+```js
+const { generateCoverLetter } = require('cover-letter-generator');
+```
+
+Type declarations ship with the build (`types: "dist/index.d.ts"`) — no `@types` package needed.
+
+### Starting from pre-segmented cover letters
+
+If your past letters already come pre-split into the six segments from some other source (a database, a form, a prior run of `segmentCoverLetter`), you can skip segmentation entirely and start straight from `CoverLetterSegments` objects.
 
 ```ts
 import {
@@ -153,14 +246,6 @@ async function main(): Promise<void> {
 void main();
 ```
 
-The package builds to CommonJS (`"type": "commonjs"`, `main: "dist/index.js"`), so plain JavaScript consumers use `require`:
-
-```js
-const { generateCoverLetter } = require('cover-letter-generator');
-```
-
-Type declarations ship with the build (`types: "dist/index.d.ts"`) — no `@types` package needed.
-
 ### Tuning the ranking weights
 
 `getTopXSimilarCoverLetters` accepts an optional fourth argument. Weights are normalized by their own sum, so they do not have to add up to `1`.
@@ -205,6 +290,14 @@ const matches = await getTopXSimilarCoverLetters(
 Everything below is exported from the package root (`src/index.ts`).
 
 ### Functions
+
+#### `segmentCoverLetter(input)`
+
+```ts
+function segmentCoverLetter(input: string): Promise<SegmentationResult>;
+```
+
+Normalizes `input`, then tries heuristic (regex) segmentation first; falls back to an LLM call when the heuristic result's confidence is low. Returns a `SegmentationResult` — `{ segments, source, confidence, fallbackReason? }` — rather than bare `CoverLetterSegments`, so callers can see `source` (`'heuristic' | 'llm'`) to know which strategy produced the segments, and `fallbackReason` when the LLM path was used.
 
 #### `generateCoverLetter(job, exampleCoverLetters)`
 
@@ -282,6 +375,15 @@ type CoverLetterSegmentName =
 
 // Plain text, before embedding.
 type CoverLetterSegments = Record<CoverLetterSegmentName, string>;
+
+// Returned by segmentCoverLetter(). `source` indicates which strategy
+// produced `segments`; `fallbackReason` is set when the LLM path was used.
+type SegmentationResult = {
+    segments: CoverLetterSegments;
+    confidence: number;
+    fallbackReason?: string;
+    source: 'heuristic' | 'llm';
+};
 
 // Text paired with its embedding vector — the working unit of the library.
 // `embedding` is omitted for a segment whose text is empty or whitespace-only
