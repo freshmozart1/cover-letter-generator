@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-08-13
+
+### Fixed
+
+- Re-pinned the `cosine-similarity` dependency to `v1.0.1`. `v1.0.0` declared
+  `"type": "commonjs"` in its own `package.json` while its `index.js` used
+  ESM `export` syntax, so any consumer that loaded the package — directly,
+  or transitively via this package's `require('cosine-similarity')` in
+  `getTopX.js` — hit a `SyntaxError`. `v1.0.1` corrects the declared type to
+  `"module"` to match the actual code; no behavior change.
+
 ## [0.9.0] - 2026-08-13
 
 ### Fixed
