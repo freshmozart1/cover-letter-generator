@@ -172,13 +172,19 @@ function createEmptyTextSegments(): CoverLetterSegments {
     };
 }
 
-export function segmentCoverLetterHeuristically(
-    input: string,
-): HeuristicSegmentationResult {
-    const allLines = input.split('\n');
-    const nonEmptyLines = allLines
-        .map<IndexedLine>((text, index) => ({ text, index }))
-        .filter((line) => line.text.length > 0);
+type MarkerLines = {
+    salutationLine: IndexedLine | undefined;
+    greetingsLine: IndexedLine | undefined;
+    subjectLine: IndexedLine | undefined;
+    hasOrderedMarkers: boolean;
+};
+
+/**
+ * Locates the salutation, greetings, and subject lines (if present) and
+ * determines whether the salutation and greetings appear in a valid order.
+ * @param nonEmptyLines the non-empty lines of the cover letter, in document order
+ */
+function locateMarkerLines(nonEmptyLines: IndexedLine[]): MarkerLines {
     // Position within nonEmptyLines, not an allLines index — findSubjectLine bounds
     // its scan by iteration position, so it needs this rather than salutationLine.index.
     const salutationPosition = nonEmptyLines.findIndex((line) =>
@@ -199,12 +205,58 @@ export function segmentCoverLetterHeuristically(
         salutationLine !== undefined &&
         greetingsLine !== undefined &&
         salutationLine.index < greetingsLine.index;
+
+    return { salutationLine, greetingsLine, subjectLine, hasOrderedMarkers };
+}
+
+/**
+ * Computes the `allLines` index range (start inclusive, end exclusive) that
+ * holds the body paragraphs, bounded by the salutation/subject line above and
+ * the greetings line below.
+ */
+function computeBodyRange(
+    allLines: string[],
+    salutationLine: IndexedLine | undefined,
+    subjectLine: IndexedLine | undefined,
+    greetingsLine: IndexedLine | undefined,
+): { bodyStartIndex: number; bodyEndIndex: number } {
     const bodyStartIndex = salutationLine
         ? salutationLine.index + 1
         : subjectLine
           ? subjectLine.index + 1
           : 0;
     const bodyEndIndex = greetingsLine?.index ?? allLines.length;
+
+    return { bodyStartIndex, bodyEndIndex };
+}
+
+function extractGreetingsText(
+    allLines: string[],
+    greetingsLine: IndexedLine | undefined,
+): string {
+    return greetingsLine
+        ? allLines
+              .slice(greetingsLine.index)
+              .filter((line) => line.trim().length > 0)
+              .join('\n')
+        : '';
+}
+
+export function segmentCoverLetterHeuristically(
+    input: string,
+): HeuristicSegmentationResult {
+    const allLines = input.split('\n');
+    const nonEmptyLines = allLines
+        .map<IndexedLine>((text, index) => ({ text, index }))
+        .filter((line) => line.text.length > 0);
+    const { salutationLine, greetingsLine, subjectLine, hasOrderedMarkers } =
+        locateMarkerLines(nonEmptyLines);
+    const { bodyStartIndex, bodyEndIndex } = computeBodyRange(
+        allLines,
+        salutationLine,
+        subjectLine,
+        greetingsLine,
+    );
     // No subject-line filter needed here: findSubjectLine only ever looks above the
     // salutation, so subjectLine.index is always below bodyStartIndex.
     const bodyParagraphs = splitParagraphs(
@@ -218,12 +270,7 @@ export function segmentCoverLetterHeuristically(
         subject: subjectLine?.text ?? '',
         salutation: salutationLine?.text ?? '',
         ...bodySegments,
-        greetings: greetingsLine
-            ? allLines
-                  .slice(greetingsLine.index)
-                  .filter((line) => line.trim().length > 0)
-                  .join('\n')
-            : '',
+        greetings: extractGreetingsText(allLines, greetingsLine),
     };
 
     return scoreHeuristicSegments(
