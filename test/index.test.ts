@@ -20,17 +20,20 @@ describe('/src/index.ts', () => {
             'function',
         );
         assert.ok(Array.isArray(entryPoint.COVER_LETTER_SEGMENT_NAMES));
+        assert.strictEqual(typeof entryPoint.segmentCoverLetter, 'function');
 
-        // Locks the surface to exactly these five runtime exports, so a future
-        // re-addition of an internal helper (e.g. segmentCoverLetter) fails loudly.
-        // Type-only exports (CoverLetter, CoverLetterSegments, Job) are erased at
-        // compile time and never appear here; npm run typecheck covers those.
+        // Locks the surface to exactly these six runtime exports, so an
+        // unintended future addition fails loudly. Type-only exports
+        // (CoverLetter, CoverLetterSegments, Job, SegmentationResult) are
+        // erased at compile time and never appear here; npm run typecheck
+        // covers those.
         assert.deepStrictEqual(Object.keys(entryPoint).sort(), [
             'COVER_LETTER_SEGMENT_NAMES',
             'embedCoverLetterSegments',
             'embedJob',
             'generateCoverLetter',
             'getTopXSimilarCoverLetters',
+            'segmentCoverLetter',
         ]);
     });
 });

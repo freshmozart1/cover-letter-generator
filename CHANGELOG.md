@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-13
+
+### Added
+
+- `segmentCoverLetter` and its `SegmentationResult` return type are exported
+  from the package root again, making stage 1 of the pipeline (heuristic
+  segmentation with LLM fallback) usable by consumers and the default
+  Quick Start entry point in the README. This reverses the part of 0.6.0
+  (closes #34) that removed this export; the other nine items 0.6.0 trimmed
+  (five runtime exports and four types) are still not exported (closes #39).
+
 ## [0.7.0] - 2026-08-12
 
 ### Added

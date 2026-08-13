@@ -4,3 +4,5 @@ export { generateCoverLetter } from './generate';
 export { getTopXSimilarCoverLetters } from './getTopX';
 export { COVER_LETTER_SEGMENT_NAMES } from './constants';
 export type { CoverLetter, CoverLetterSegments, Job } from './types';
+export { segmentCoverLetter } from './coverLetterSegmentation';
+export type { SegmentationResult } from './coverLetterSegmentation';
