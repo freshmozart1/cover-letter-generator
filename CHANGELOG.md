@@ -27,6 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of handing the empty or truncated `output_text` to `JSON.parse` and
   surfacing a bare `SyntaxError`.
 
+### Internal
+
+- `createCoverLetterRevisionPrompt` in `src/reviseCoverLetterText.ts` is no
+  longer declared with `export`. It was never re-exported from `src/index.ts`,
+  so the package's public surface is unchanged; only a deep import of
+  `dist/reviseCoverLetterText.js` would notice the difference.
+
 ## [0.10.0] - 2026-09-09
 
 ### Added

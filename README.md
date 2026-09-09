@@ -340,7 +340,9 @@ function reviseCoverLetterText(
 Rewrites `input.selectedText` according to `input.instruction`, using the
 complete cover-letter draft and job posting as context. The result is the
 replacement passage only, ready to insert at the caller's captured range. The
-operation does not segment, embed, or persist the draft.
+operation does not segment, embed, or persist the draft. Throws if the model
+returns an incomplete response (e.g. it spent its whole output budget on
+reasoning) instead of parsing the truncated output.
 
 #### `embedJob(job)`
 
