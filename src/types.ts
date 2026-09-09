@@ -25,3 +25,10 @@ export type Job = {
     location?: string;
     description: string;
 };
+
+export type CoverLetterRevisionInput = {
+    selectedText: string;
+    instruction: string;
+    coverLetterText: string;
+    job: Job;
+};
