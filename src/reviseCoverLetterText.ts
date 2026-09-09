@@ -18,7 +18,7 @@ const REVISION_SCHEMA = {
     additionalProperties: false,
 } as const;
 
-export function createCoverLetterRevisionPrompt({
+function createCoverLetterRevisionPrompt({
     selectedText,
     instruction,
     coverLetterText,
