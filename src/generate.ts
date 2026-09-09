@@ -7,6 +7,7 @@ import { normalizeCoverLetterText } from './normalize';
 import { WRITING_RULES } from './constants/writingRules';
 import { GENERATOR_INSTRUCTIONS } from './constants/generatorInstructions';
 import { GENERATOR_MODEL } from './constants/generatorModel';
+import { GENERATOR_REASONING_EFFORT } from './constants/generatorReasoningEffort';
 
 /**
  * This function creates ai prompts for writing cover letters
@@ -50,6 +51,7 @@ export async function generateCoverLetter(
         model: GENERATOR_MODEL,
         instructions: GENERATOR_INSTRUCTIONS,
         input: generatorInput,
+        reasoning: { effort: GENERATOR_REASONING_EFFORT },
         text: {
             format: {
                 type: 'json_schema',
@@ -59,6 +61,10 @@ export async function generateCoverLetter(
             },
         },
     });
+    if (aiResponse.status === 'incomplete')
+        throw new Error(
+            `OpenAI returned an incomplete cover letter (${aiResponse.incomplete_details?.reason ?? 'unknown reason'})`,
+        );
     return embedCoverLetterSegments(
         parseCoverLetterSegmentsResponse(aiResponse.output_text),
     );

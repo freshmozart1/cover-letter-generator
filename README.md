@@ -28,7 +28,7 @@ The library is built around a four-stage pipeline.
 | 1   | **Segment**  | An existing cover letter is normalized (mojibake repair, whitespace/newline cleanup) and split into the six segments by regex heuristics. The result is scored for confidence; if the score indicates a problem (no salutation, markers out of order, body not splittable…), it falls back to the `gpt-5.6-luna` model, which is additionally validated to only return text present in the source. | `src/coverLetterSegmentation/`                       |
 | 2   | **Embed**    | Each non-empty segment is embedded with OpenAI `text-embedding-3-small`, producing a `CoverLetter` — text plus embedding vector per segment. A segment that is empty or whitespace-only (e.g. a subject the heuristic segmenter couldn't find) keeps its text with no embedding, instead of being sent to the API.                                                                                 | `src/embedCoverLetterSegments.ts`                    |
 | 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity — optionally scaled by job-to-job similarity when the letter's original job is known — and the top _x_ are returned sorted by score.                                                                                                                                             | `src/getTopX.ts`                                     |
-| 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-5.6-sol` through OpenAI's Responses API, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`.                                                                                                                                                                           | `src/generate.ts`, `src/constants/segmentsSchema.ts` |
+| 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-6-astra` through OpenAI's Responses API at `reasoning.effort: 'high'`, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`; an incomplete response (e.g. the model exhausting its output budget on reasoning) is rejected with an explicit error rather than parsed.    | `src/generate.ts`, `src/constants/segmentsSchema.ts` |
 
 All four stages — Segment, Embed, Rank, and Generate — are exported from the package entry point, along with `embedJob`, which produces the embedding vector that stage 3 needs for the target job — using the same `jobToText` text representation that stage 4 uses internally, so the two stay in sync. See [API reference](#api-reference).
 
@@ -340,7 +340,9 @@ function reviseCoverLetterText(
 Rewrites `input.selectedText` according to `input.instruction`, using the
 complete cover-letter draft and job posting as context. The result is the
 replacement passage only, ready to insert at the caller's captured range. The
-operation does not segment, embed, or persist the draft.
+operation does not segment, embed, or persist the draft. Throws if the model
+returns an incomplete response (e.g. it spent its whole output budget on
+reasoning) instead of parsing the truncated output.
 
 #### `embedJob(job)`
 
@@ -443,6 +445,7 @@ type CoverLetterRevisionInput = {
 ## Known limitations
 
 - **Every call costs OpenAI tokens.** `embedCoverLetterSegments`, `embedJob`, `generateCoverLetter`, and `reviseCoverLetterText` all hit the API; cache embedded letters rather than recomputing them per job.
+- **Generation and revision run at `reasoning.effort: 'high'`** (`src/constants/generatorReasoningEffort.ts`), so both bill reasoning tokens on top of output tokens and take noticeably longer than a non-reasoning call — budget for that on interactive paths.
 - **Heuristic segmentation is tuned for German and English** salutation/greeting conventions; other languages will usually take the LLM fallback path.
 
 ## Development
