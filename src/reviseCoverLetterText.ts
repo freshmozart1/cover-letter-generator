@@ -61,6 +61,7 @@ export async function reviseCoverLetterText(
         model: GENERATOR_MODEL,
         instructions: REVISION_INSTRUCTIONS,
         input: createCoverLetterRevisionPrompt(input),
+        reasoning: { effort: 'high' },
         text: {
             format: {
                 type: 'json_schema',

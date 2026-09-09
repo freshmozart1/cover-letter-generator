@@ -13,6 +13,7 @@ type CreateParams = {
     model: string;
     instructions: string;
     input: string;
+    reasoning: { effort: string };
 };
 
 describe('/src/generate.ts', () => {
@@ -55,6 +56,7 @@ describe('/src/generate.ts', () => {
         assert.strictEqual(createCall?.model, GENERATOR_MODEL);
         assert.strictEqual(createCall?.instructions, GENERATOR_INSTRUCTIONS);
         assert.strictEqual(createCall?.input, expectedPrompt);
+        assert.strictEqual(createCall?.reasoning.effort, 'high');
 
         assert.strictEqual(parseSpy.mock.callCount(), 1);
         assert.strictEqual(parseSpy.mock.calls[0]?.arguments[0], rawAiResponse);

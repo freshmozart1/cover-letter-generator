@@ -7,6 +7,7 @@ type CreateParams = {
     model: string;
     instructions: string;
     input: string;
+    reasoning: { effort: string };
     text: {
         format: {
             type: string;
@@ -52,6 +53,7 @@ describe('/src/reviseCoverLetterText.ts', () => {
         assert.strictEqual(createSpy.mock.callCount(), 1);
         const params = createSpy.mock.calls[0]?.arguments[0];
         assert.strictEqual(params?.model, GENERATOR_MODEL);
+        assert.strictEqual(params?.reasoning.effort, 'high');
         assert.strictEqual(params?.text.format.type, 'json_schema');
         assert.strictEqual(params?.text.format.name, 'cover_letter_revision');
         assert.strictEqual(params?.text.format.strict, true);

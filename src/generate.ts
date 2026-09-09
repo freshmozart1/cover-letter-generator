@@ -50,6 +50,7 @@ export async function generateCoverLetter(
         model: GENERATOR_MODEL,
         instructions: GENERATOR_INSTRUCTIONS,
         input: generatorInput,
+        reasoning: { effort: 'high' },
         text: {
             format: {
                 type: 'json_schema',
