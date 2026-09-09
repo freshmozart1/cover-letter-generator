@@ -16,6 +16,10 @@ describe('/src/index.ts', () => {
         assert.strictEqual(typeof entryPoint.embedJob, 'function');
         assert.strictEqual(typeof entryPoint.generateCoverLetter, 'function');
         assert.strictEqual(
+            typeof entryPoint.reviseCoverLetterText,
+            'function',
+        );
+        assert.strictEqual(
             typeof entryPoint.getTopXSimilarCoverLetters,
             'function',
         );
@@ -33,6 +37,7 @@ describe('/src/index.ts', () => {
             'embedJob',
             'generateCoverLetter',
             'getTopXSimilarCoverLetters',
+            'reviseCoverLetterText',
             'segmentCoverLetter',
         ]);
     });

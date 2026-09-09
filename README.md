@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.9.0`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.10.0`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -16,6 +16,7 @@ Given a job posting and a library of your own past cover letters, the package fi
 - **Structured output, not a blob of prose.** Every letter is six named segments (`subject`, `salutation`, `introduction`, `mainBody`, `conclusion`, `greetings`), enforced by a strict OpenAI JSON schema — easy to render into a PDF, an email, or a form.
 - **Per-segment relevance ranking.** Similarity is computed per segment and weighted, so a job match is driven by the `mainBody` (weight `0.5`) rather than by boilerplate greetings (weight `0.02`).
 - **Cheap-path-first segmentation.** Existing letters are parsed with regex heuristics and only fall back to an LLM call when the heuristic result scores low confidence.
+- **Focused revisions.** A selected passage can be rewritten from an instruction while the complete draft and job posting remain available as context.
 - **Typed end to end.** TypeScript strict mode plus `noUncheckedIndexedAccess`; declaration files ship with the build.
 
 ## How it works
@@ -68,7 +69,7 @@ npm link cover-letter-generator
 The package can also be installed directly as a git dependency of another project, pinned to a tag:
 
 ```bash
-npm install github:freshmozart1/cover-letter-generator#v0.9.0
+npm install github:freshmozart1/cover-letter-generator#v0.10.0
 ```
 
 `dist/` is built automatically during this install via the package's `prepare` script (`npm run build:prod`), so `main`/`types` resolve correctly right away — no manual build step needed.
@@ -328,6 +329,19 @@ function generateCoverLetter(
 
 Generates a new cover letter for `job` using `exampleCoverLetters` as style references, and returns it already embedded. Instructs the model to match the language of the job posting and to stay under 250 words. Empty segments in the examples are dropped before they are shown to the model. Takes plain `CoverLetterSegments` (text only) rather than embedded `CoverLetter`s — it never needed the embeddings.
 
+#### `reviseCoverLetterText(input)`
+
+```ts
+function reviseCoverLetterText(
+    input: CoverLetterRevisionInput,
+): Promise<string>;
+```
+
+Rewrites `input.selectedText` according to `input.instruction`, using the
+complete cover-letter draft and job posting as context. The result is the
+replacement passage only, ready to insert at the caller's captured range. The
+operation does not segment, embed, or persist the draft.
+
 #### `embedJob(job)`
 
 ```ts
@@ -417,11 +431,18 @@ type Job = {
     location?: string;
     description: string;
 };
+
+type CoverLetterRevisionInput = {
+    selectedText: string;
+    instruction: string;
+    coverLetterText: string;
+    job: Job;
+};
 ```
 
 ## Known limitations
 
-- **Every call costs OpenAI tokens.** `embedCoverLetterSegments`, `embedJob`, and `generateCoverLetter` all hit the API; cache embedded letters rather than recomputing them per job.
+- **Every call costs OpenAI tokens.** `embedCoverLetterSegments`, `embedJob`, `generateCoverLetter`, and `reviseCoverLetterText` all hit the API; cache embedded letters rather than recomputing them per job.
 - **Heuristic segmentation is tuned for German and English** salutation/greeting conventions; other languages will usually take the LLM fallback path.
 
 ## Development

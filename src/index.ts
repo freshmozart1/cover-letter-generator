@@ -1,8 +1,14 @@
 export { embedCoverLetterSegments } from './embedCoverLetterSegments';
 export { embedJob } from './embedJob';
 export { generateCoverLetter } from './generate';
+export { reviseCoverLetterText } from './reviseCoverLetterText';
 export { getTopXSimilarCoverLetters } from './getTopX';
 export { COVER_LETTER_SEGMENT_NAMES } from './constants';
-export type { CoverLetter, CoverLetterSegments, Job } from './types';
+export type {
+    CoverLetter,
+    CoverLetterRevisionInput,
+    CoverLetterSegments,
+    Job,
+} from './types';
 export { segmentCoverLetter } from './coverLetterSegmentation';
 export type { SegmentationResult } from './coverLetterSegmentation';

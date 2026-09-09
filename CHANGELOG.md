@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-09
+
+### Added
+
+- Added `reviseCoverLetterText`, a stateless public helper that revises one
+  selected cover-letter passage using a user instruction, the complete draft,
+  and job context. It uses a strict response schema, preserves the draft's
+  language unless translation is requested, and rejects blank or fenced model
+  output.
+
 ## [0.9.1] - 2026-08-13
 
 ### Fixed
