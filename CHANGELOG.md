@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-09
+
+### Changed
+
+- Cover letter generation and revision moved from `gpt-5.6-sol` to
+  `gpt-6-astra` (`GENERATOR_MODEL`), and both now request
+  `reasoning.effort: 'high'`. The effort is pinned in the new
+  `src/constants/generatorReasoningEffort.ts` alongside the model constant, so
+  `generateCoverLetter` and `reviseCoverLetterText` cannot drift apart. Expect
+  higher latency and reasoning-token cost per call; the segmentation fallback
+  is untouched and still runs `gpt-5.6-luna` (closes #46).
+
+### Fixed
+
+- `generateCoverLetter` and `reviseCoverLetterText` now reject a response that
+  came back with `status: 'incomplete'` (e.g. the model spending its whole
+  output budget on reasoning) with an explicit error naming the reason,
+  instead of handing the empty or truncated `output_text` to `JSON.parse` and
+  surfacing a bare `SyntaxError`.
+
 ## [0.10.0] - 2026-09-09
 
 ### Added

@@ -1,4 +1,5 @@
 import { GENERATOR_MODEL } from './constants/generatorModel';
+import { GENERATOR_REASONING_EFFORT } from './constants/generatorReasoningEffort';
 import { jobToText } from './jobToText';
 import { openAI } from './llm';
 import type { CoverLetterRevisionInput } from './types';
@@ -61,7 +62,7 @@ export async function reviseCoverLetterText(
         model: GENERATOR_MODEL,
         instructions: REVISION_INSTRUCTIONS,
         input: createCoverLetterRevisionPrompt(input),
-        reasoning: { effort: 'high' },
+        reasoning: { effort: GENERATOR_REASONING_EFFORT },
         text: {
             format: {
                 type: 'json_schema',
@@ -71,6 +72,11 @@ export async function reviseCoverLetterText(
             },
         },
     });
+
+    if (aiResponse.status === 'incomplete')
+        throw new Error(
+            `OpenAI returned an incomplete replacement passage (${aiResponse.incomplete_details?.reason ?? 'unknown reason'})`,
+        );
 
     return parseCoverLetterRevisionResponse(aiResponse.output_text);
 }

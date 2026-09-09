@@ -5,6 +5,7 @@ import { COVER_LETTER } from './constants/coverLetterSegments.js';
 import { WRITING_RULES } from '../src/constants/writingRules.js';
 import { GENERATOR_MODEL } from '../src/constants/generatorModel.js';
 import { GENERATOR_INSTRUCTIONS } from '../src/constants/generatorInstructions.js';
+import { GENERATOR_REASONING_EFFORT } from '../src/constants/generatorReasoningEffort.js';
 import { JOB } from './constants/job.js';
 import { COVER_LETTER_SEGMENT_NAMES } from '../src/constants/segmentNames.js';
 import type { CoverLetter, CoverLetterSegments } from '../src/types.js';
@@ -14,6 +15,20 @@ type CreateParams = {
     instructions: string;
     input: string;
     reasoning: { effort: string };
+    text: {
+        format: {
+            type: string;
+            name: string;
+            strict: boolean;
+            schema: unknown;
+        };
+    };
+};
+
+type CreateResult = {
+    output_text: string;
+    status?: string;
+    incomplete_details?: { reason: string };
 };
 
 describe('/src/generate.ts', () => {
@@ -26,7 +41,7 @@ describe('/src/generate.ts', () => {
         ) as CoverLetter;
         const rawAiResponse = JSON.stringify(COVER_LETTER);
         const createSpy = t.mock.fn<
-            (params: CreateParams) => Promise<{ output_text: string }>
+            (params: CreateParams) => Promise<CreateResult>
         >(async () => ({ output_text: rawAiResponse }));
         const parseSpy = t.mock.fn<(input: string) => CoverLetterSegments>(
             () => COVER_LETTER,
@@ -56,7 +71,13 @@ describe('/src/generate.ts', () => {
         assert.strictEqual(createCall?.model, GENERATOR_MODEL);
         assert.strictEqual(createCall?.instructions, GENERATOR_INSTRUCTIONS);
         assert.strictEqual(createCall?.input, expectedPrompt);
-        assert.strictEqual(createCall?.reasoning.effort, 'high');
+        assert.strictEqual(
+            createCall?.reasoning?.effort,
+            GENERATOR_REASONING_EFFORT,
+        );
+        assert.strictEqual(createCall?.text.format.type, 'json_schema');
+        assert.strictEqual(createCall?.text.format.name, 'cover_letter');
+        assert.strictEqual(createCall?.text.format.strict, true);
 
         assert.strictEqual(parseSpy.mock.callCount(), 1);
         assert.strictEqual(parseSpy.mock.calls[0]?.arguments[0], rawAiResponse);
@@ -65,6 +86,17 @@ describe('/src/generate.ts', () => {
         assert.strictEqual(embedSpy.mock.calls[0]?.arguments[0], COVER_LETTER);
 
         assert.equal(output, expectedOutput);
+
+        createSpy.mock.mockImplementationOnce(async () => ({
+            output_text: '',
+            status: 'incomplete',
+            incomplete_details: { reason: 'max_output_tokens' },
+        }));
+        await assert.rejects(
+            generate.generateCoverLetter(JOB, [COVER_LETTER]),
+            /incomplete cover letter \(max_output_tokens\)/,
+        );
+        assert.strictEqual(parseSpy.mock.callCount(), 1);
     });
     test('createCoverLetterPrompt() returns correct prompt', async () => {
         const coverLetterText = Object.values(COVER_LETTER).join('\n');
