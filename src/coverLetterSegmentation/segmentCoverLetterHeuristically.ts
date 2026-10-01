@@ -20,7 +20,7 @@ type IndexedLine = {
 };
 
 /**
- * A function that finds the subject line of a cover letter. It only searches the
+ * A function that finds the first subject line of a cover letter. It only searches the
  * lines above the salutation. When a salutation was found, its position is used
  * as the exact upper bound of the search, and either an explicit subject marker
  * ({@link SUBJECT_PREFIX_PATTERN}) or a loose keyword match
@@ -32,7 +32,7 @@ type IndexedLine = {
  * @param lines the non-empty lines of the cover letter, in document order
  * @param salutationPosition index of the salutation **within `lines`** — a
  * position, not an `allLines` index. Omit it when no salutation was found.
- * @returns the subject line, or `undefined` if there is none
+ * @returns the subject's starting line, or `undefined` if there is none
  */
 function findSubjectLine(
     lines: IndexedLine[],
@@ -48,6 +48,32 @@ function findSubjectLine(
                     line.text.length <= 180 &&
                     SUBJECT_KEYWORD_PATTERN.test(line.text))),
     );
+}
+
+function extractSubjectBlock(
+    allLines: string[],
+    subjectLine: IndexedLine | undefined,
+    salutationLine: IndexedLine | undefined,
+): { text: string; hasUnassignedText: boolean } {
+    if (!subjectLine) return { text: '', hasUnassignedText: false };
+    // Without a recognized salutation the result already requires a fallback.
+    // Do not guess how far an unbounded subject extends into the body.
+    if (!salutationLine)
+        return { text: subjectLine.text, hasUnassignedText: false };
+
+    // Start at the detected subject, leaving preceding letterhead/recipient
+    // lines out. A blank line or the salutation ends the contiguous block.
+    const lines = allLines.slice(subjectLine.index, salutationLine.index);
+    const blankLine = lines.findIndex((line) => line.trim().length === 0);
+    const end = blankLine === -1 ? lines.length : blankLine;
+    return {
+        text: lines.slice(0, end).join('\n'),
+        // A separated reference or continuation cannot simply disappear. Let
+        // the source-preserving fallback handle ambiguous text after the block.
+        hasUnassignedText: lines
+            .slice(end)
+            .some((line) => line.trim().length > 0),
+    };
 }
 
 function splitParagraphs(lines: string[]): string[] {
@@ -251,6 +277,11 @@ export function segmentCoverLetterHeuristically(
         .filter((line) => line.text.length > 0);
     const { salutationLine, greetingsLine, subjectLine, hasOrderedMarkers } =
         locateMarkerLines(nonEmptyLines);
+    const subjectBlock = extractSubjectBlock(
+        allLines,
+        subjectLine,
+        salutationLine,
+    );
     const { bodyStartIndex, bodyEndIndex } = computeBodyRange(
         allLines,
         salutationLine,
@@ -267,11 +298,18 @@ export function segmentCoverLetterHeuristically(
     const bodySegments = buildBodySegments(bodyParagraphs);
     const segments: CoverLetterSegments = {
         ...createEmptyTextSegments(),
-        subject: subjectLine?.text ?? '',
+        subject: subjectBlock.text,
         salutation: salutationLine?.text ?? '',
         ...bodySegments,
         greetings: extractGreetingsText(allLines, greetingsLine),
     };
+
+    if (subjectBlock.hasUnassignedText)
+        return {
+            segments,
+            confidence: 0.45,
+            fallbackReason: 'unassigned text between subject and salutation',
+        };
 
     return scoreHeuristicSegments(
         segments,

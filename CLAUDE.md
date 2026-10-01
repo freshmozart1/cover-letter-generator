@@ -17,6 +17,8 @@ The LLM fallback validates the complete round trip (GitHub issue #53). `normaliz
 
 There is no reliable letterhead classifier in the fallback. It must retain that text or reject; do not skip an arbitrary prefix before the first returned segment. The heuristic path's recognized letterhead handling remains unchanged and is covered separately. `test/coverLetterSegmentation/sourcePreservation.test.ts` exercises the actual public `segmentCoverLetter` route, mocking only the shared OpenAI response method; no live model is called.
 
+The heuristic's subject marker identifies a block start (GitHub issue #54). `extractSubjectBlock` preserves consecutive non-blank lines from there up to the first blank line or recognized salutation, keeping earlier letterhead/recipient lines out. Non-empty text after that blank boundary but before the salutation produces `unassigned text between subject and salutation` at confidence `0.45`, so the complete-source LLM guard handles it instead of the heuristic dropping it. Without a recognized salutation, the existing low-confidence single-line subject remains and triggers fallback. Public `wrappedSubject.test.ts` cases use provider stubs that throw on unexpected heuristic-path calls, check normalized reconstruction, and exercise ambiguous continuation fallback/rejection.
+
 ## Commands
 
 - Build: For development builds run `npm run build:dev` (`tsc -p tsconfig.json`). For production builds run `npm run build:prod` (`rm -rf dist && tsc -p tsconfig.prod.json`) — this is the one whose flat `dist/*.js` layout matches `package.json`'s `main`/`types` fields; it cleans `dist/` first so leftovers from `build:dev`/`typecheck` can't leak into it.
