@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.11.2`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.11.3`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -383,7 +383,9 @@ Returns the `x` highest-scoring letters, **each wrapped with its score** — `ge
 | `conclusion`   | `0.2`  |
 | `greetings`    | `0.02` |
 
-`exampleJobs` is optional and defaults to `[]`. It's matched by index to `coverLetters`: `exampleJobs[i]` is the embedding of the job that `coverLetters[i]` was originally written for. When present, that letter's weighted segment similarity is additionally multiplied by the cosine similarity between `jobEmbedding` and `exampleJobs[i]` — so a letter written for a job close to the target job ranks higher. A `null`, missing, or out-of-bounds entry falls back to a multiplier of `1` (today's unchanged behavior).
+`exampleJobs` is optional and defaults to `[]`. It's matched by index to `coverLetters`: `exampleJobs[i]` is the embedding of the job that `coverLetters[i]` was originally written for. When present, the score is `max(0, weighted segment similarity) * max(0, job-to-job cosine similarity)`. Both factors are clamped only after the weighted segment score has been computed, so two negative similarities cannot turn into a positive match. Positive factors keep their existing product; a zero or negative factor gives zero, and increasing either known factor cannot lower the combined score.
+
+When `exampleJobs` is omitted or an entry is `null`, missing or out of bounds, the score remains the original signed weighted segment similarity, including negative values. This preserves the segment-only policy; it does not treat an unknown original job as a known dissimilar one. Returned `coverLetter` values are the original input objects.
 
 #### `embedCoverLetterSegments(segments)`
 
