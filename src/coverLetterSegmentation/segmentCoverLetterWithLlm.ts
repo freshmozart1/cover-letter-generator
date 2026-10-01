@@ -5,9 +5,11 @@ import { type CoverLetterSegments } from './types';
 
 const FALLBACK_MODEL = 'gpt-5.6-luna';
 const FALLBACK_INSTRUCTIONS =
-    'Segment the cover letter into the requested fields. Preserve the original wording exactly. Do not summarize, rewrite, translate, or invent content. Return empty strings for sections that are absent.';
+    'Segment the cover letter into the requested fields in subject, salutation, introduction, mainBody, conclusion, greetings order. Preserve the complete original wording exactly once and in its original order, including any letterhead text. Do not omit, repeat, summarize, rewrite, translate, or invent content. Return empty strings only for sections that are absent.';
 
-function normalizeForContainment(input: string): string {
+function normalizeForSourceComparison(
+    input: string | CoverLetterSegments,
+): string {
     return normalizeCoverLetterText(input).replace(/\n+/g, ' ');
 }
 
@@ -15,15 +17,15 @@ function validateSourcePreservingSegments(
     sourceText: string,
     segments: CoverLetterSegments,
 ): boolean {
-    const normalizedSourceText = normalizeForContainment(sourceText);
-
-    return Object.values(segments).every((segmentText) => {
-        const normalizedSegmentText = normalizeForContainment(segmentText);
-        return (
-            normalizedSegmentText.length === 0 ||
-            normalizedSourceText.includes(normalizedSegmentText)
-        );
-    });
+    // normalizeCoverLetterText joins the six fields in canonical order, not
+    // object insertion order. Comparing the whole round trip proves complete,
+    // disjoint, ordered coverage, including repeated phrases. Only the existing
+    // normalization and newline-to-space equivalence are allowed; there is no
+    // reliable letterhead classifier here that could justify skipping text.
+    return (
+        normalizeForSourceComparison(sourceText) ===
+        normalizeForSourceComparison(segments)
+    );
 }
 
 export async function segmentCoverLetterWithLlm(
@@ -47,7 +49,7 @@ export async function segmentCoverLetterWithLlm(
 
     if (!validateSourcePreservingSegments(input, normalizedSegments))
         throw new Error(
-            'OpenAI returned cover letter segments that are not present in the source text',
+            'OpenAI returned cover letter segments that do not preserve the complete source text in segment order',
         );
 
     return normalizedSegments;

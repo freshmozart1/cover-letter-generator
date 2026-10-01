@@ -11,6 +11,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. Ranks stored example cover letters against a target job by weighted per-segment cosine similarity, optionally scaled by job-to-job cosine similarity when the letter's original job embedding is supplied (`src/getTopX.ts`).
 4. Generates a new cover letter with OpenAI's Responses API (`gpt-6-astra`, `reasoning.effort` from `src/constants/generatorReasoningEffort.ts`) using the most similar examples as style references, against a strict JSON schema (`src/constants/segmentsSchema.ts`). `reviseCoverLetterText` uses the same model and reasoning effort.
 
+## Segmentation source preservation
+
+The LLM fallback validates the complete round trip (GitHub issue #53). `normalizeCoverLetterText(segments)` joins fields through `COVER_LETTER_SEGMENT_NAMES` in canonical order; its output and the source must compare equal after the existing newline-run-to-space comparison. Keep the existing mojibake repair, NFC, newline and per-line whitespace normalization. Do not use independent substring membership, arbitrary offset searches or an unordered `Object.values` join: they accept omissions, overlapping reuse or reordering. Equality preserves legitimate missing fields and repeated source phrases while rejecting loss or duplication.
+
+There is no reliable letterhead classifier in the fallback. It must retain that text or reject; do not skip an arbitrary prefix before the first returned segment. The heuristic path's recognized letterhead handling remains unchanged and is covered separately. `test/coverLetterSegmentation/sourcePreservation.test.ts` exercises the actual public `segmentCoverLetter` route, mocking only the shared OpenAI response method; no live model is called.
+
 ## Commands
 
 - Build: For development builds run `npm run build:dev` (`tsc -p tsconfig.json`). For production builds run `npm run build:prod` (`rm -rf dist && tsc -p tsconfig.prod.json`) — this is the one whose flat `dist/*.js` layout matches `package.json`'s `main`/`types` fields; it cleans `dist/` first so leftovers from `build:dev`/`typecheck` can't leak into it.
