@@ -24,7 +24,7 @@ describe('/src/coverLetterSegmentation/segmentCoverLetterWithLlm.ts', () => {
         await segmentCoverLetterWithLlm(DIRTY_COVER_LETTER_AI_RESPONSE_SOURCE);
         assert.equal(createSpy.mock.calls.length, 1);
     });
-    test('segmentCoverLetterWithLlm() returns normalized segments when every segment is contained in the source text', async (t) => {
+    test('segmentCoverLetterWithLlm() returns normalized segments when they preserve the complete source in order', async (t) => {
         const { openAI } = await import('../../src/llm.js');
         t.mock.method(openAI.responses, 'create', async () => ({
             output_text: DIRTY_COVER_LETTER_AI_RESPONSE,
@@ -62,7 +62,7 @@ describe('/src/coverLetterSegmentation/segmentCoverLetterWithLlm.ts', () => {
                 ),
             {
                 message:
-                    'OpenAI returned cover letter segments that are not present in the source text',
+                    'OpenAI returned cover letter segments that do not preserve the complete source text in segment order',
             },
         );
     });

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-10-01
+
+### Fixed
+
+- LLM segmentation now requires the six fields in canonical order to reproduce
+  the complete normalized source. All-empty output for non-empty input, missing
+  passages, overlapping/reused text and reordered sections reject instead of
+  silently changing the draft (GitHub issue #53).
+- Existing whitespace/newline, NFC and German mojibake normalization remain
+  supported, as do genuinely absent sections and correctly repeated phrases.
+  The fallback retains letterhead text or rejects; it does not guess which
+  prefixes are metadata. Heuristic letterhead behavior is unchanged.
+
+### Validation
+
+- Added public segmentation regressions with mocked OpenAI responses for source
+  coverage, order, word boundaries, absent fields, repeated phrases, normalization
+  and letterhead behavior. No live provider calls are required.
+
 ## [0.11.0] - 2026-09-09
 
 ### Changed

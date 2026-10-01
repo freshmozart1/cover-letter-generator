@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.10.0`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.11.1`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -25,7 +25,7 @@ The library is built around a four-stage pipeline.
 
 | #   | Stage        | What happens                                                                                                                                                                                                                                                                                                                                                                                       | Key source                                           |
 | --- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| 1   | **Segment**  | An existing cover letter is normalized (mojibake repair, whitespace/newline cleanup) and split into the six segments by regex heuristics. The result is scored for confidence; if the score indicates a problem (no salutation, markers out of order, body not splittable…), it falls back to the `gpt-5.6-luna` model, which is additionally validated to only return text present in the source. | `src/coverLetterSegmentation/`                       |
+| 1   | **Segment**  | An existing cover letter is normalized (mojibake repair, whitespace/newline cleanup) and split into the six segments by regex heuristics. The result is scored for confidence; if the score indicates a problem (no salutation, markers out of order, body not splittable…), it falls back to the `gpt-5.6-luna` model, whose six fields must reproduce the complete normalized source in canonical order. | `src/coverLetterSegmentation/`                       |
 | 2   | **Embed**    | Each non-empty segment is embedded with OpenAI `text-embedding-3-small`, producing a `CoverLetter` — text plus embedding vector per segment. A segment that is empty or whitespace-only (e.g. a subject the heuristic segmenter couldn't find) keeps its text with no embedding, instead of being sent to the API.                                                                                 | `src/embedCoverLetterSegments.ts`                    |
 | 3   | **Rank**     | Each stored `CoverLetter` is scored against the target job's embedding via weighted per-segment cosine similarity — optionally scaled by job-to-job similarity when the letter's original job is known — and the top _x_ are returned sorted by score.                                                                                                                                             | `src/getTopX.ts`                                     |
 | 4   | **Generate** | The job plus the top-ranked example letters are sent to `gpt-6-astra` through OpenAI's Responses API at `reasoning.effort: 'high'`, constrained by a strict JSON schema. The response is parsed, normalized, and re-embedded into a new `CoverLetter`; an incomplete response (e.g. the model exhausting its output budget on reasoning) is rejected with an explicit error rather than parsed.    | `src/generate.ts`, `src/constants/segmentsSchema.ts` |
@@ -317,6 +317,12 @@ function segmentCoverLetter(input: string): Promise<SegmentationResult>;
 ```
 
 Normalizes `input`, then tries heuristic (regex) segmentation first; falls back to an LLM call when the heuristic result's confidence is low. Returns a `SegmentationResult` — `{ segments, source, confidence, fallbackReason? }` — rather than bare `CoverLetterSegments`, so callers can see `source` (`'heuristic' | 'llm'`) to know which strategy produced the segments, and `fallbackReason` when the LLM path was used.
+
+The LLM fallback accepts output only when joining its fields in canonical order (`subject`, `salutation`, `introduction`, `mainBody`, `conclusion`, `greetings`) reproduces the complete normalized source. It rejects omitted, repeated, overlapping or reordered content, including all-empty output for a non-empty source. Truly absent sections may be empty, and a phrase repeated in the source may appear the same number of times in the output.
+
+The comparison uses the existing normalization: common German mojibake repair, Unicode NFC, CRLF/CR to LF, collapsed tabs/spaces and trimming within each line, and outer trimming. Runs of newlines compare as one space, allowing paragraph boundaries to differ without deleting word boundaries or changing punctuation. JSON key insertion order does not affect the canonical comparison.
+
+The fallback does not infer letterhead exclusions. All source text, including names, addresses and dates, must be retained in the returned fields; otherwise it rejects with `OpenAI returned cover letter segments that do not preserve the complete source text in segment order`. A recognized letter taking the heuristic path keeps that path's existing letterhead handling. This validation does not change heuristic segmentation.
 
 #### `generateCoverLetter(job, exampleCoverLetters)`
 

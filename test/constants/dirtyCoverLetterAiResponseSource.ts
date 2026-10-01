@@ -1,7 +1,6 @@
 // The source text a caller would pass to segmentCoverLetterWithLlm() to
-// legitimately produce DIRTY_COVER_LETTER_AI_RESPONSE — every field value in
-// that response is a substring of this text, so containment validation
-// should accept it.
+// legitimately produce DIRTY_COVER_LETTER_AI_RESPONSE — its fields preserve
+// this complete text in canonical order after whitespace/mojibake normalization.
 export const DIRTY_COVER_LETTER_AI_RESPONSE_SOURCE = `Bewerbung
 
 Sehr geehrte Damen und Herren,
