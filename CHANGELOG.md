@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-10-01
+
+### Fixed
+
+- Heuristic segmentation now retains a wrapped subject's full contiguous block,
+  including role and reference continuation lines, up to a blank line or the
+  recognized salutation. Preceding letterhead and recipient blocks remain outside
+  the subject (GitHub issue #54).
+- Ambiguous non-empty text between a subject-ending blank line and the salutation
+  now triggers the source-preserving LLM fallback instead of disappearing from a
+  high-confidence result. The complete-source validation from #53 remains active.
+
+### Validation
+
+- Public segmentation regressions cover wrapped German/English subjects,
+  references, blank/salutation boundaries, long recipient blocks, reconstruction,
+  and ambiguous continuation fallback. Expected heuristic cases reject unexpected
+  provider calls; no live model is used.
+
 ## [0.11.1] - 2026-10-01
 
 ### Fixed

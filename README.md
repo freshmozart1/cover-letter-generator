@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.11.1`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.11.2`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -317,6 +317,8 @@ function segmentCoverLetter(input: string): Promise<SegmentationResult>;
 ```
 
 Normalizes `input`, then tries heuristic (regex) segmentation first; falls back to an LLM call when the heuristic result's confidence is low. Returns a `SegmentationResult` — `{ segments, source, confidence, fallbackReason? }` — rather than bare `CoverLetterSegments`, so callers can see `source` (`'heuristic' | 'llm'`) to know which strategy produced the segments, and `fallbackReason` when the LLM path was used.
+
+For a recognized salutation, the heuristic retains the full contiguous subject block from its detected first line to the next blank line or salutation, preserving line breaks in wrapped roles and references. Preceding letterhead and recipient lines remain outside the subject. Non-empty text separated from the subject by a blank line but still before the salutation is ambiguous: it triggers the LLM fallback with `unassigned text between subject and salutation` rather than being silently discarded.
 
 The LLM fallback accepts output only when joining its fields in canonical order (`subject`, `salutation`, `introduction`, `mainBody`, `conclusion`, `greetings`) reproduces the complete normalized source. It rejects omitted, repeated, overlapping or reordered content, including all-empty output for a non-empty source. Truly absent sections may be empty, and a phrase repeated in the source may appear the same number of times in the output.
 
