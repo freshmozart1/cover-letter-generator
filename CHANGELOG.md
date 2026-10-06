@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-10-01
+
+### Fixed
+
+- Ranking with a known example job now multiplies non-negative relevance
+  factors: `max(0, weighted segment similarity) * max(0, job cosine)`. Two
+  opposite examples can no longer outrank a related pair by multiplying two
+  negative similarities (GitHub issue #55).
+- Omitted, null and missing example-job entries retain the original signed
+  segment-only score. Positive-score products, segment-weight aggregation and
+  returned cover-letter object references are preserved.
+
+### Validation
+
+- Public ranking tests use real finite vectors for opposite/positive pairs, a
+  signed-factor grid with monotonicity checks, zero scores, custom weighting and
+  missing example-job cases. No provider calls or mocked cosine scores are used.
+
+## [0.11.2] - 2026-10-01
+
+### Fixed
+
+- Heuristic segmentation now retains a wrapped subject's full contiguous block,
+  including role and reference continuation lines, up to a blank line or the
+  recognized salutation. Preceding letterhead and recipient blocks remain outside
+  the subject (GitHub issue #54).
+- Ambiguous non-empty text between a subject-ending blank line and the salutation
+  now triggers the source-preserving LLM fallback instead of disappearing from a
+  high-confidence result. The complete-source validation from #53 remains active.
+
+### Validation
+
+- Public segmentation regressions cover wrapped German/English subjects,
+  references, blank/salutation boundaries, long recipient blocks, reconstruction,
+  and ambiguous continuation fallback. Expected heuristic cases reject unexpected
+  provider calls; no live model is used.
+
 ## [0.11.1] - 2026-10-01
 
 ### Fixed

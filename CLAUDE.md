@@ -17,6 +17,19 @@ The LLM fallback validates the complete round trip (GitHub issue #53). `normaliz
 
 There is no reliable letterhead classifier in the fallback. It must retain that text or reject; do not skip an arbitrary prefix before the first returned segment. The heuristic path's recognized letterhead handling remains unchanged and is covered separately. `test/coverLetterSegmentation/sourcePreservation.test.ts` exercises the actual public `segmentCoverLetter` route, mocking only the shared OpenAI response method; no live model is called.
 
+The heuristic's subject marker identifies a block start (GitHub issue #54). `extractSubjectBlock` preserves consecutive non-blank lines from there up to the first blank line or recognized salutation, keeping earlier letterhead/recipient lines out. Non-empty text after that blank boundary but before the salutation produces `unassigned text between subject and salutation` at confidence `0.45`, so the complete-source LLM guard handles it instead of the heuristic dropping it. Without a recognized salutation, the existing low-confidence single-line subject remains and triggers fallback. Public `wrappedSubject.test.ts` cases use provider stubs that throw on unexpected heuristic-path calls, check normalized reconstruction, and exercise ambiguous continuation fallback/rejection.
+
+## Ranking relevance
+
+The optional `exampleJobs` ranking path clamps the aggregated weighted letter
+score and job cosine separately at zero before multiplying (GitHub issue #55).
+This makes the combined score non-negative and monotonic in both factors;
+negative × negative must never promote an opposite example. Do not clamp each
+segment before aggregation. Missing/null/out-of-bounds example jobs keep the
+original signed segment-only score. `test/getTopXRelevance.test.ts` exercises the
+public function with real finite nonzero vectors, a signed-factor grid, custom
+weight aggregation and original-object identity; it does not mock cosine scores.
+
 ## Commands
 
 - Build: For development builds run `npm run build:dev` (`tsc -p tsconfig.json`). For production builds run `npm run build:prod` (`rm -rf dist && tsc -p tsconfig.prod.json`) — this is the one whose flat `dist/*.js` layout matches `package.json`'s `main`/`types` fields; it cleans `dist/` first so leftovers from `build:dev`/`typecheck` can't leak into it.
