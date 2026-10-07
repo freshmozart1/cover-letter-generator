@@ -8,7 +8,7 @@ A TypeScript library that generates AI-tailored cover letters by learning the st
 
 Given a job posting and a library of your own past cover letters, the package finds the letters that are semantically closest to the job, then asks an OpenAI model to write a new one in the same voice — segmented into structured fields you can render however you like.
 
-> **Status:** `0.11.4`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
+> **Status:** `0.11.5`, `private: true` — not published to npm. Install it from source or as a git dependency (see [Installation](#installation)). The public API is still moving; see [Known limitations](#known-limitations).
 
 ## Why use it
 
@@ -69,7 +69,7 @@ npm link cover-letter-generator
 The package can also be installed directly as a git dependency of another project, pinned to a tag:
 
 ```bash
-npm install github:freshmozart1/cover-letter-generator#v0.10.0
+npm install github:freshmozart1/cover-letter-generator#v0.11.5
 ```
 
 `dist/` is built automatically during this install via the package's `prepare` script (`npm run build:prod`), so `main`/`types` resolve correctly right away — no manual build step needed.
@@ -79,7 +79,7 @@ npm install github:freshmozart1/cover-letter-generator#v0.10.0
 The `cosine-similarity` dependency resolves to a **GitHub tag rather than the npm registry**:
 
 ```json
-"cosine-similarity": "github:freshmozart1/cosine-similarity#v1.0.0"
+"cosine-similarity": "github:freshmozart1/cosine-similarity#v1.0.3"
 ```
 
 npm refuses git-sourced dependencies unless they are explicitly permitted. This repo's `.npmrc` contains exactly one line to allow it:
@@ -386,6 +386,8 @@ Returns the `x` highest-scoring letters, **each wrapped with its score** — `ge
 `exampleJobs` is optional and defaults to `[]`. It's matched by index to `coverLetters`: `exampleJobs[i]` is the embedding of the job that `coverLetters[i]` was originally written for. When present, the score is `max(0, weighted segment similarity) * max(0, job-to-job cosine similarity)`. Both factors are clamped only after the weighted segment score has been computed, so two negative similarities cannot turn into a positive match. Positive factors keep their existing product; a zero or negative factor gives zero, and increasing either known factor cannot lower the combined score.
 
 When `exampleJobs` is omitted or an entry is `null`, missing or out of bounds, the score remains the original signed weighted segment similarity, including negative values. This preserves the segment-only policy; it does not treat an unknown original job as a known dissimilar one. Returned `coverLetter` values are the original input objects.
+
+`cosine-similarity` v1.0.3 scales finite nonzero vectors independently before calculating the cosine, so large and tiny embeddings (including scales of `1e300` and `1e-300`) retain finite scores. Segment scores still normalize over the weights of available embeddings; missing embeddings are skipped. Zero or empty vectors retain `NaN` scores, and mismatched dimensions still throw. This dependency update does not change the ranking parameters or return types.
 
 #### `embedCoverLetterSegments(segments)`
 

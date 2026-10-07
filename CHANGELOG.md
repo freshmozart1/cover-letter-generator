@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.5] - 2026-10-07
+
+### Fixed
+
+- Upgraded `cosine-similarity` from v1.0.1 to v1.0.3, resolved in the npm
+  lockfile to `71354e7a804c7f9fe5493bc313423b8d6c5d2c5b`. Independent vector
+  scaling prevents magnitude overflow and underflow in ranking for large and
+  tiny finite nonzero embeddings (GitHub issue #62).
+- The dependency now ships a direct TypeScript declaration accepting readonly
+  vectors and excludes development tests from its installed package payload.
+- Weighted normalization over available embeddings, skipped missing embeddings,
+  nonnegative known-job relevance, signed unknown-job fallback, descending
+  ordering, slicing and original object references remain unchanged. Zero and
+  empty vectors retain `NaN` scores; dimension mismatches still reject. The
+  generator's public ranking types and text normalization are unchanged.
+
+### Validation
+
+- All five repository checks pass, including 95 tests without live provider
+  calls. Ten public-ranking regressions use the real installed cosine dependency
+  at scales of `1e300` and `1e-300`, covering scores, ordering, weighting,
+  missing embeddings, relevance factors and the existing invalid-vector rules.
+
 ## [0.11.4] - 2026-10-07
 
 ### Internal

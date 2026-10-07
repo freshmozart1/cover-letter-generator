@@ -30,6 +30,14 @@ original signed segment-only score. `test/getTopXRelevance.test.ts` exercises th
 public function with real finite nonzero vectors, a signed-factor grid, custom
 weight aggregation and original-object identity; it does not mock cosine scores.
 
+`cosine-similarity` v1.0.3 scales finite nonzero vectors independently to avoid
+magnitude overflow and underflow (GitHub issue #62). Keep the generator's public
+ranking types and normalization unchanged. `test/getTopXStability.test.ts`
+exercises real installed cosine scores at `1e300` and `1e-300` through the public
+entry point, including weighting, skipped embeddings, ordering, slicing and
+original references. Zero/empty vectors still produce `NaN`; mismatched
+dimensions still throw. These ranking tests do not call OpenAI.
+
 ## Commands
 
 - Build: For development builds run `npm run build:dev` (`tsc -p tsconfig.json`). For production builds run `npm run build:prod` (`rm -rf dist && tsc -p tsconfig.prod.json`) — this is the one whose flat `dist/*.js` layout matches `package.json`'s `main`/`types` fields; it cleans `dist/` first so development output cannot leak into it.
