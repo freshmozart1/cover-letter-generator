@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.4] - 2026-10-07
+
+### Internal
+
+- Simplified heuristic segmentation by removing overwritten segment defaults,
+  redundant paragraph cases, overlapping salutation patterns and single-use body
+  helpers. Segment text, confidence scores, fallback reasons and public APIs are
+  preserved (PR #60).
+- Typechecking and ESLint now use the same configuration for source and tests.
+  Removed the duplicate TypeScript check and `tsconfig.test.json`, and updated
+  the development instructions.
+- Replaced randomized ranking mocks with deterministic real-vector inputs and
+  removed the module-reload wrapper. Simplified segmentation mock setup and
+  removed ten redundant export-only tests while retaining behavioral tests and
+  the public API surface check.
+- Consolidated identical response fixtures, removed a stale analyzer suppression
+  and trimmed unused analyzer configuration scaffolding.
+
+### Validation
+
+- All five repository checks pass, including 85 tests without live provider
+  calls. 74,560 deterministic comparisons of raw and normalized inputs matched
+  the pre-cleanup heuristic outputs. Production package exports, declarations
+  and server-consumed model/reasoning imports remain intact.
+
 ## [0.11.3] - 2026-10-01
 
 ### Fixed
