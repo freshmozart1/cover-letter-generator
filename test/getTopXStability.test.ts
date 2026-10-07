@@ -108,8 +108,10 @@ describe('public ranking with large and tiny finite embeddings', () => {
                     [letter],
                     weights,
                 );
-                assert.equal(segmentOnly[0]?.coverLetter, letter);
-                assertScore(segmentOnly[0]?.similarity, 0.15);
+                const segmentMatch = segmentOnly[0];
+                assert.ok(segmentMatch);
+                assert.equal(segmentMatch.coverLetter, letter);
+                assertScore(segmentMatch.similarity, 0.15);
 
                 const knownJob = await getTopXSimilarCoverLetters(
                     1,
@@ -118,8 +120,10 @@ describe('public ranking with large and tiny finite embeddings', () => {
                     weights,
                     [scaledVector(0.8, exampleScale)],
                 );
-                assert.equal(knownJob[0]?.coverLetter, letter);
-                assertScore(knownJob[0]?.similarity, 0.12);
+                const knownMatch = knownJob[0];
+                assert.ok(knownMatch);
+                assert.equal(knownMatch.coverLetter, letter);
+                assertScore(knownMatch.similarity, 0.12);
             });
         }
     }
