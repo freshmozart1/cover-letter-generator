@@ -1,4 +1,4 @@
-import { test, describe, it } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import { JOB } from './constants/job.js';
 import { JOB_STRING } from './constants/jobString.js';
@@ -15,9 +15,5 @@ describe('/src/jobToText.ts', () => {
             }),
             'Job Title: TEST\nCompany: TEST\nLocation: Not specified\nDescription: TEST',
         );
-    });
-    it('exports jobToText()', async () => {
-        const { jobToText } = await import('../src/jobToText.js');
-        assert.strictEqual(typeof jobToText, 'function');
     });
 });

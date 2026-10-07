@@ -8,7 +8,7 @@ const SUBJECT_PREFIX_PATTERN = /^(?:betreff|betr\.?|subject|re)\s*[:-]/iu;
 const SUBJECT_KEYWORD_PATTERN =
     /\b(?:bewerbung|application|applying|position|stelle|ausbildung|praktikum)\b/iu;
 const SALUTATION_PATTERN =
-    /^(?:sehr geehrte(?:r|\s+damen\s+und\s+herren|\s+frau|\s+herr)|liebe(?:r|\s)|hallo\b|guten tag\b|hello\b|dear\s+|to whom it may concern|dear hiring manager|dear sir or madam)/iu;
+    /^(?:sehr geehrte(?:r|\s+damen\s+und\s+herren|\s+frau|\s+herr)|liebe(?:r|\s)|hallo\b|guten tag\b|hello\b|dear\s+|to whom it may concern)/iu;
 const GREETINGS_PATTERN =
     /^(?:mit freundlichen gr(?:ü|ue)ßen|freundliche gr(?:ü|ue)ße|viele gr(?:ü|ue)ße|herzliche gr(?:ü|ue)ße|beste gr(?:ü|ue)ße|kind regards|best regards|sincerely|yours faithfully|yours sincerely|regards)\b/iu;
 const SENTENCE_BOUNDARY_PATTERN = /(?<=[.!?])\s+/u;
@@ -85,56 +85,21 @@ function splitParagraphs(lines: string[]): string[] {
 }
 
 function buildBodySegments(bodyParagraphs: string[]): BodySegments {
-    if (bodyParagraphs.length === 0)
-        return { introduction: '', mainBody: '', conclusion: '' };
     if (bodyParagraphs.length === 1) {
-        const { remainingText, lastSentence } = splitLastSentence(
-            bodyParagraphs[0] ?? '',
+        const sentences = (bodyParagraphs[0] ?? '').split(
+            SENTENCE_BOUNDARY_PATTERN,
         );
         return {
-            introduction: remainingText,
+            introduction: sentences.slice(0, -1).join(' '),
             mainBody: '',
-            conclusion: lastSentence,
-        };
-    }
-
-    if (bodyParagraphs.length === 2) {
-        return {
-            introduction: bodyParagraphs[0] ?? '',
-            mainBody: '',
-            conclusion: bodyParagraphs[1] ?? '',
+            conclusion: sentences.at(-1) ?? '',
         };
     }
 
     return {
         introduction: bodyParagraphs[0] ?? '',
         mainBody: bodyParagraphs.slice(1, -1).join('\n\n'),
-        conclusion: bodyParagraphs[bodyParagraphs.length - 1] ?? '',
-    };
-}
-
-function splitLastSentence(paragraph: string): {
-    remainingText: string;
-    lastSentence: string;
-} {
-    const sentences = paragraph
-        .split(SENTENCE_BOUNDARY_PATTERN)
-        .map((sentence) => sentence.trim())
-        .filter((sentence) => sentence.length > 0);
-
-    if (sentences.length < 2) {
-        return { remainingText: '', lastSentence: paragraph.trim() };
-    }
-
-    const lastSentence = sentences[sentences.length - 1];
-
-    if (!lastSentence) {
-        return { remainingText: '', lastSentence: paragraph.trim() };
-    }
-
-    return {
-        remainingText: sentences.slice(0, -1).join(' '),
-        lastSentence,
+        conclusion: bodyParagraphs.at(-1) ?? '',
     };
 }
 
@@ -176,7 +141,7 @@ function scoreHeuristicSegments(
         };
     }
 
-    if (!hasMultipleBodyParagraphs && !segments.mainBody) {
+    if (!hasMultipleBodyParagraphs) {
         return {
             segments,
             confidence: 0.55,
@@ -185,17 +150,6 @@ function scoreHeuristicSegments(
     }
 
     return { segments, confidence: segments.mainBody ? 0.95 : 0.75 };
-}
-
-function createEmptyTextSegments(): CoverLetterSegments {
-    return {
-        subject: '',
-        salutation: '',
-        introduction: '',
-        mainBody: '',
-        conclusion: '',
-        greetings: '',
-    };
 }
 
 type MarkerLines = {
@@ -235,27 +189,6 @@ function locateMarkerLines(nonEmptyLines: IndexedLine[]): MarkerLines {
     return { salutationLine, greetingsLine, subjectLine, hasOrderedMarkers };
 }
 
-/**
- * Computes the `allLines` index range (start inclusive, end exclusive) that
- * holds the body paragraphs, bounded by the salutation/subject line above and
- * the greetings line below.
- */
-function computeBodyRange(
-    allLines: string[],
-    salutationLine: IndexedLine | undefined,
-    subjectLine: IndexedLine | undefined,
-    greetingsLine: IndexedLine | undefined,
-): { bodyStartIndex: number; bodyEndIndex: number } {
-    const bodyStartIndex = salutationLine
-        ? salutationLine.index + 1
-        : subjectLine
-          ? subjectLine.index + 1
-          : 0;
-    const bodyEndIndex = greetingsLine?.index ?? allLines.length;
-
-    return { bodyStartIndex, bodyEndIndex };
-}
-
 function extractGreetingsText(
     allLines: string[],
     greetingsLine: IndexedLine | undefined,
@@ -282,22 +215,15 @@ export function segmentCoverLetterHeuristically(
         subjectLine,
         salutationLine,
     );
-    const { bodyStartIndex, bodyEndIndex } = computeBodyRange(
-        allLines,
-        salutationLine,
-        subjectLine,
-        greetingsLine,
-    );
+    const bodyStartIndex = ((salutationLine ?? subjectLine)?.index ?? -1) + 1;
+    const bodyEndIndex = greetingsLine?.index ?? allLines.length;
     // No subject-line filter needed here: findSubjectLine only ever looks above the
     // salutation, so subjectLine.index is always below bodyStartIndex.
     const bodyParagraphs = splitParagraphs(
-        bodyStartIndex < bodyEndIndex
-            ? allLines.slice(bodyStartIndex, bodyEndIndex)
-            : [],
+        allLines.slice(bodyStartIndex, bodyEndIndex),
     );
     const bodySegments = buildBodySegments(bodyParagraphs);
     const segments: CoverLetterSegments = {
-        ...createEmptyTextSegments(),
         subject: subjectBlock.text,
         salutation: salutationLine?.text ?? '',
         ...bodySegments,

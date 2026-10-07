@@ -1,4 +1,4 @@
-import { it, describe, beforeEach, test } from 'node:test';
+import { describe, beforeEach, test } from 'node:test';
 import assert from 'node:assert';
 import { CoverLetterSegments } from '../src/types.js';
 import { COVER_LETTER_DIRTY_JSON } from './constants/coverLetterDirtyJson.js';
@@ -6,15 +6,6 @@ import { COVER_LETTER_DIRTY_JSON } from './constants/coverLetterDirtyJson.js';
 describe('/src/llm.ts', () => {
     beforeEach(() => {
         process.env.OPENAI_API_KEY ??= 'test-key';
-    });
-    it('exports parseCoverLetterSegmentsResponse()', async () => {
-        const { parseCoverLetterSegmentsResponse } =
-            await import('../src/llm.js');
-        assert.strictEqual(typeof parseCoverLetterSegmentsResponse, 'function');
-    });
-    it('exports const openAI', async () => {
-        const { openAI } = await import('../src/llm.js');
-        assert.strictEqual(typeof openAI, 'object');
     });
     test('parseCoverLetterSegmentsResponse(input) throws if input is not a cover letter', async () => {
         const { parseCoverLetterSegmentsResponse } =

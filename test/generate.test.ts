@@ -1,4 +1,4 @@
-import { test, describe, it } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import { JOB_STRING } from './constants/jobString.js';
 import { COVER_LETTER } from './constants/coverLetterSegments.js';
@@ -115,9 +115,5 @@ describe('/src/generate.ts', () => {
                 createCoverLetterPrompt(JOB, [COVER_LETTER]),
         );
         assert.strictEqual(output, expectedOutput);
-    });
-    it('exports generateCoverLetter()', async () => {
-        const { generateCoverLetter } = await import('../src/generate.js');
-        assert.strictEqual(typeof generateCoverLetter, 'function');
     });
 });

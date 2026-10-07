@@ -1,5 +1,5 @@
 // The source text a caller would pass to segmentCoverLetterWithLlm() to
-// legitimately produce DIRTY_COVER_LETTER_AI_RESPONSE — its fields preserve
+// legitimately produce COVER_LETTER_DIRTY_JSON — its fields preserve
 // this complete text in canonical order after whitespace/mojibake normalization.
 export const DIRTY_COVER_LETTER_AI_RESPONSE_SOURCE = `Bewerbung
 

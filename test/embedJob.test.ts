@@ -1,4 +1,4 @@
-import { test, describe, it } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import { JOB } from './constants/job.js';
 
@@ -22,9 +22,5 @@ describe('/src/embedJob.ts', () => {
             message: 'Failed to embed job posting',
         });
         assert.strictEqual(embedSpy.mock.callCount(), 2);
-    });
-    it('exports embedJob()', async () => {
-        const { embedJob } = await import('../src/embedJob.js');
-        assert.strictEqual(typeof embedJob, 'function');
     });
 });

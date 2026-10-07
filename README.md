@@ -463,7 +463,7 @@ type CoverLetterRevisionInput = {
 ```bash
 npm install          # requires the allow-git=root line in .npmrc
 npm run build:dev    # tsc -p tsconfig.json → dist/
-npm run typecheck    # tsc --noEmit on both tsconfig.json and tsconfig.test.json
+npm run typecheck    # tsc -p tsconfig.json --noEmit checks src/ and test/
 npm test             # OPENAI_API_KEY=test-key node --experimental-test-module-mocks --import tsx --test "test/**/*.test.ts"
 npm run lint         # eslint .
 npm run format       # prettier --write .
@@ -478,7 +478,7 @@ CI (`.github/workflows/ci.yml`) runs the same five gates automatically on every 
 - **Formatting:** Prettier with single quotes and 4-space indentation (`.prettierrc`) — both differ from Prettier's defaults.
 - **TypeScript:** strict mode plus `noUncheckedIndexedAccess`, so indexed access is typed as possibly `undefined`. Keep the defensive `??` fallbacks and existence checks that already appear throughout `src/`.
 - **Module system:** `"type": "commonjs"` in `package.json` alongside `module`/`moduleResolution: "nodenext"` in `tsconfig.json`. This combination is intentional — the package ships CommonJS output.
-- **Three tsconfigs:** `tsconfig.json` is the shared base (`rootDir: "."`, includes both `src/**` and `test/**`) and drives `npm run build:dev`. `tsconfig.test.json` extends it and sets `noEmit: true`, so `npm run typecheck`'s second pass covers `test/**` without writing to disk. `tsconfig.prod.json` extends the base but narrows back to `rootDir: "src"` / `src/**/*.ts` only, producing the flat `dist/*.js` layout that `main`/`types` point at — `build:prod` cleans `dist/` first so output from the other two configs can't leak into it.
+- **TypeScript configs:** `tsconfig.json` includes both `src/**` and `test/**` and drives `npm run build:dev`; `npm run typecheck` checks that same program without emitting files. `tsconfig.prod.json` narrows the build to `rootDir: "src"` / `src/**/*.ts`, producing the flat `dist/*.js` layout that `main`/`types` point at. `build:prod` cleans `dist/` first so development output cannot leak into it.
 
 ### Layout
 
