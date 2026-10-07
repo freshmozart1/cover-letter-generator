@@ -15,10 +15,7 @@ describe('/src/index.ts', () => {
         );
         assert.strictEqual(typeof entryPoint.embedJob, 'function');
         assert.strictEqual(typeof entryPoint.generateCoverLetter, 'function');
-        assert.strictEqual(
-            typeof entryPoint.reviseCoverLetterText,
-            'function',
-        );
+        assert.strictEqual(typeof entryPoint.reviseCoverLetterText, 'function');
         assert.strictEqual(
             typeof entryPoint.getTopXSimilarCoverLetters,
             'function',
@@ -26,7 +23,7 @@ describe('/src/index.ts', () => {
         assert.ok(Array.isArray(entryPoint.COVER_LETTER_SEGMENT_NAMES));
         assert.strictEqual(typeof entryPoint.segmentCoverLetter, 'function');
 
-        // Locks the surface to exactly these six runtime exports, so an
+        // Locks the surface to exactly these runtime exports, so an
         // unintended future addition fails loudly. Type-only exports
         // (CoverLetter, CoverLetterSegments, Job, SegmentationResult) are
         // erased at compile time and never appear here; npm run typecheck

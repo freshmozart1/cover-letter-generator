@@ -10,7 +10,7 @@ export function parseCoverLetterSegmentsResponse(
     const parsedOutput: unknown = JSON.parse(aiResponse);
     if (!isCoverLetterTextSegments(parsedOutput))
         throw new Error('OpenAI did not return valid cover letter segments');
-    const normalizedSegments: CoverLetterSegments = {
+    return {
         subject: normalizeCoverLetterText(parsedOutput.subject),
         salutation: normalizeCoverLetterText(parsedOutput.salutation),
         introduction: normalizeCoverLetterText(parsedOutput.introduction),
@@ -18,6 +18,4 @@ export function parseCoverLetterSegmentsResponse(
         conclusion: normalizeCoverLetterText(parsedOutput.conclusion),
         greetings: normalizeCoverLetterText(parsedOutput.greetings),
     };
-
-    return normalizedSegments;
 }

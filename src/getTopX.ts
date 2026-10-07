@@ -18,7 +18,6 @@ import { cosineSimilarity } from 'cosine-similarity';
 // Exported so its weighting/skip logic can be unit-tested directly
 // (test/getTopX.test.ts); only used internally by getTopXSimilarCoverLetters()
 // otherwise.
-// fallow-ignore-next-line unused-export
 export function calculateWeightedCoverLetterSimilarity(
     jobEmbedding: TextEmbedding,
     coverLetter: CoverLetter,

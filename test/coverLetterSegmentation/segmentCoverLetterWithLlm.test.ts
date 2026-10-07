@@ -1,22 +1,17 @@
-import { test, describe, it } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert';
-import { DIRTY_COVER_LETTER_AI_RESPONSE } from '../constants/dirtyCoverLetterAiResponse.js';
+import { COVER_LETTER_DIRTY_JSON } from '../constants/coverLetterDirtyJson.js';
 import { DIRTY_COVER_LETTER_AI_RESPONSE_SOURCE } from '../constants/dirtyCoverLetterAiResponseSource.js';
 import { CoverLetterSegments } from '../../src/types.js';
 
 describe('/src/coverLetterSegmentation/segmentCoverLetterWithLlm.ts', () => {
-    it('exports segmentCoverLetterWithLlm()', async () => {
-        const { segmentCoverLetterWithLlm } =
-            await import('../../src/coverLetterSegmentation/segmentCoverLetterWithLlm.js');
-        assert.strictEqual(typeof segmentCoverLetterWithLlm, 'function');
-    });
     test('segmentCoverLetterWithLlm() calls openAI.responses.create', async (t) => {
         const { openAI } = await import('../../src/llm.js');
         const createSpy = t.mock.method(
             openAI.responses,
             'create',
             async () => ({
-                output_text: DIRTY_COVER_LETTER_AI_RESPONSE,
+                output_text: COVER_LETTER_DIRTY_JSON,
             }),
         );
         const { segmentCoverLetterWithLlm } =
@@ -27,7 +22,7 @@ describe('/src/coverLetterSegmentation/segmentCoverLetterWithLlm.ts', () => {
     test('segmentCoverLetterWithLlm() returns normalized segments when they preserve the complete source in order', async (t) => {
         const { openAI } = await import('../../src/llm.js');
         t.mock.method(openAI.responses, 'create', async () => ({
-            output_text: DIRTY_COVER_LETTER_AI_RESPONSE,
+            output_text: COVER_LETTER_DIRTY_JSON,
         }));
         const { segmentCoverLetterWithLlm } =
             await import('../../src/coverLetterSegmentation/segmentCoverLetterWithLlm.js');
@@ -50,7 +45,7 @@ describe('/src/coverLetterSegmentation/segmentCoverLetterWithLlm.ts', () => {
     test('segmentCoverLetterWithLlm() throws when a returned segment is not present in the source text', async (t) => {
         const { openAI } = await import('../../src/llm.js');
         t.mock.method(openAI.responses, 'create', async () => ({
-            output_text: DIRTY_COVER_LETTER_AI_RESPONSE,
+            output_text: COVER_LETTER_DIRTY_JSON,
         }));
         const { segmentCoverLetterWithLlm } =
             await import('../../src/coverLetterSegmentation/segmentCoverLetterWithLlm.js');

@@ -1,4 +1,4 @@
-import { test, describe, it } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import { openAI } from '../src/llm';
 
@@ -25,9 +25,5 @@ describe('/src/embed.ts', () => {
         const stringOutput = await embed('test');
         assert.strictEqual(createSpy.mock.callCount(), 3);
         assert.strictEqual(stringOutput.length, 1);
-    });
-    it('exports embed()', async () => {
-        const { embed } = await import('../src/embed.js');
-        assert.strictEqual(typeof embed, 'function');
     });
 });

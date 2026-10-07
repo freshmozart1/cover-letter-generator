@@ -1,4 +1,4 @@
-import { describe, it, test } from 'node:test';
+import { describe, test } from 'node:test';
 import assert from 'node:assert';
 import { CoverLetterSegments } from '../../src/types.js';
 
@@ -12,11 +12,6 @@ describe('/src/coverLetterSegmentation/isCoverLetterTextSegments.ts', () => {
         greetings: 'Freundliche Grüße',
     };
 
-    it('exports isCoverLetterTextSegments()', async () => {
-        const { isCoverLetterTextSegments } =
-            await import('../../src/coverLetterSegmentation/isCoverLetterTextSegments.js');
-        assert.strictEqual(typeof isCoverLetterTextSegments, 'function');
-    });
     test('isCoverLetterTextSegments(input) returns false if input is not an object', async () => {
         const { isCoverLetterTextSegments } =
             await import('../../src/coverLetterSegmentation/isCoverLetterTextSegments.js');

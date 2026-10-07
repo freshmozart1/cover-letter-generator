@@ -32,9 +32,9 @@ weight aggregation and original-object identity; it does not mock cosine scores.
 
 ## Commands
 
-- Build: For development builds run `npm run build:dev` (`tsc -p tsconfig.json`). For production builds run `npm run build:prod` (`rm -rf dist && tsc -p tsconfig.prod.json`) — this is the one whose flat `dist/*.js` layout matches `package.json`'s `main`/`types` fields; it cleans `dist/` first so leftovers from `build:dev`/`typecheck` can't leak into it.
+- Build: For development builds run `npm run build:dev` (`tsc -p tsconfig.json`). For production builds run `npm run build:prod` (`rm -rf dist && tsc -p tsconfig.prod.json`) — this is the one whose flat `dist/*.js` layout matches `package.json`'s `main`/`types` fields; it cleans `dist/` first so development output cannot leak into it.
 - Test: `npm test` (Node's built-in test runner via `OPENAI_API_KEY=test-key node --experimental-test-module-mocks --import tsx --test "test/**/*.test.ts"` — no Jest/Vitest/Mocha; the hardcoded key is a placeholder since the OpenAI client is never actually called — all tests mock it)
-- Typecheck: `npm run typecheck` (checks both `tsconfig.json` and `tsconfig.test.json`)
+- Typecheck: `npm run typecheck` (checks both `src/**` and `test/**` through `tsconfig.json`, without emitting files)
 - Lint: `npm run lint` (`eslint .`)
 - Format: `npm run format` (`prettier --write .`)
 
@@ -45,7 +45,7 @@ There's no combined "check everything" script — use the `/verify` skill for th
 - Prettier: single quotes, 4-space indentation (`.prettierrc` — both differ from Prettier defaults).
 - TypeScript strict mode plus `noUncheckedIndexedAccess` — indexed array/object access is typed as possibly `undefined`, so expect and preserve the defensive `?? ` / existence checks already present in `src/`.
 - `type: "commonjs"` in `package.json` despite `module`/`moduleResolution: "nodenext"` in `tsconfig.json` — this is intentional, not a bug to "fix".
-- Three tsconfig files: `tsconfig.json` is the shared base (`rootDir: "."`, includes both `src/**` and `test/**`) — this is what `npm run build:dev` and `npm run typecheck`'s first pass use. `tsconfig.test.json` extends it and sets `noEmit: true`, so `typecheck`'s second pass covers `test/**` without writing anything to disk. `tsconfig.prod.json` extends the base but narrows back to `rootDir: "src"` / `include: ["src/**/*.ts"]`, producing the flat `dist/*.js` layout `package.json`'s `main`/`types` point at — that's the one anything published relies on, and its `build:prod` script cleans `dist/` first so stray output from the other two configs can't leak into it.
+- TypeScript configs: `tsconfig.json` is the shared base (`rootDir: "."`, includes both `src/**` and `test/**`) for `npm run build:dev`; `npm run typecheck` checks that same program without emitting files. `tsconfig.prod.json` narrows the production build to `rootDir: "src"` / `include: ["src/**/*.ts"]`, producing the flat `dist/*.js` layout `package.json`'s `main`/`types` point at. `build:prod` cleans `dist/` first so development output cannot leak into it.
 
 ## Environment
 
